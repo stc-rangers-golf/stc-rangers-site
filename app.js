@@ -36,8 +36,9 @@ function ensureLoginModalMarkup() {
         </div>
         <div id="forgotPasswordPanel" class="hidden" hidden>
           <h2>Forgot Password</h2>
-          <p>Enter the email on your Rangers account. We will send a password setup link.</p>
+          <p>Enter the email and phone number on your Rangers account. If email delivery is unavailable, your phone number lets you set the password here.</p>
           <label>Member Email<input id="forgotPasswordEmail" type="email" autocomplete="email" placeholder="member@email.com" /></label>
+          <label>Phone Number On File<input id="forgotPasswordPhone" type="tel" autocomplete="tel" placeholder="Phone number" /></label>
           <div class="modal-actions">
             <button class="button button-red full" type="button" id="sendResetLinkButton">Continue</button>
             <button class="button button-outline full" type="button" data-login-back>Back To Login</button>
@@ -55,7 +56,7 @@ function ensureLoginModalMarkup() {
         </div>
         <div id="createAccountPanel" class="hidden" hidden>
           <h2>Create Account</h2>
-          <p>If you are already on the member list, this will send a password setup link to your email.</p>
+          <p>If you are already on the member list, this will start your password setup. Enter the same phone number the league has on file.</p>
           <label>Full Name<input id="accountNameInput" type="text" autocomplete="name" placeholder="Full name" /></label>
           <label>Email<input id="accountEmailInput" type="email" autocomplete="email" placeholder="member@email.com" /></label>
           <label>Phone Number<input id="accountPhoneInput" type="tel" autocomplete="tel" placeholder="Phone number" /></label>
@@ -871,6 +872,7 @@ loginForm.addEventListener("submit", async (event) => {
         return;
       }
       showLoginSubpanel("forgotPasswordPanel", result.message || "This account needs a password setup. Use Forgot password and we will send a setup link.");
+      document.querySelector("#forgotPasswordPhone").value = "";
       document.querySelector("#forgotPasswordEmail").focus();
       return;
     }
@@ -893,7 +895,7 @@ document.querySelector("#forgotPasswordButton").addEventListener("click", () => 
 
 document.querySelector("#sendResetLinkButton").addEventListener("click", async () => {
   const email = normalizeEmailInput(document.querySelector("#forgotPasswordEmail").value);
-  const phone = "";
+  const phone = document.querySelector("#forgotPasswordPhone").value.trim();
   if (!email) {
     loginStatus.textContent = "Enter your member email address.";
     return;

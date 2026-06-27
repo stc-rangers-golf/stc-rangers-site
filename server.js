@@ -544,7 +544,7 @@ async function handleApi(req, res, url) {
       ok: true,
       service: "stc-rangers-standalone",
       time: new Date().toISOString(),
-      emailConfigured: Boolean(process.env.SMTP_HOST),
+      emailConfigured: Boolean(process.env.SMTP_HOST || process.env.STC_EMAIL_WEBHOOK_URL || process.env.RESEND_API_KEY),
       users: loadUsers().length,
     });
   }
@@ -625,14 +625,17 @@ async function handleApi(req, res, url) {
       });
     }
     const entry = await createPasswordReset(req, user);
+    const canUseInlineReset = entry.delivery !== "sent" && memberPhoneMatches(user, payload.phone);
     return sendJson(res, 200, {
       ok: true,
       delivery: entry.delivery,
-      inlineReset: false,
-      resetToken: "",
+      inlineReset: canUseInlineReset,
+      resetToken: canUseInlineReset ? entry.resetToken : "",
       message: entry.delivery === "sent"
         ? `Password setup link sent to ${user.email}. Check inbox and spam.`
-        : "Password reset was recorded, but email delivery is unavailable right now. Please contact the committee.",
+        : canUseInlineReset
+          ? "Phone number verified. Choose a new password now."
+          : "Email delivery is unavailable right now. Enter the phone number on file so we can verify you here.",
     });
   }
 
@@ -695,15 +698,18 @@ async function handleApi(req, res, url) {
     const existingUser = findUser(email);
     if (existingUser) {
       const entry = await createPasswordReset(req, existingUser);
+      const canUseInlineReset = entry.delivery !== "sent" && memberPhoneMatches(existingUser, phone);
       return sendJson(res, 200, {
         ok: true,
         existingMember: true,
         delivery: entry.delivery,
-        inlineReset: false,
-        resetToken: "",
+        inlineReset: canUseInlineReset,
+        resetToken: canUseInlineReset ? entry.resetToken : "",
         message: entry.delivery === "sent"
           ? `You already have a member account. A password setup link was sent to ${existingUser.email}.`
-          : "You already have a member account, but email delivery is unavailable right now. Please contact the committee.",
+          : canUseInlineReset
+            ? "Member account found and phone number verified. Choose a password now."
+            : "You already have a member account, but email delivery is unavailable right now. Use Forgot password with the phone number on file.",
       });
     }
     const requests = readJsonFile(accountRequestsFile(), []);
@@ -988,60 +994,12 @@ function serveStatic(req, res, url) {
 
 function patchIndexHtml(body) {
   return String(body)
-    .replace(/styles\.css\?v=[^"]+/g, "styles.css?v=20260627a")
-    .replace(/app\.js\?v=[^"]+/g, "app.js?v=20260627a");
+    .replace(/styles\.css\?v=[^"]+/g, "styles.css?v=20260627b")
+    .replace(/app\.js\?v=[^"]+/g, "app.js?v=20260627b");
 }
 
 function patchClientApp(body) {
-  return String(body)
-    .replace(
-      "Enter the email and phone number on your Rangers account. If email delivery is unavailable, your phone number lets you set the password here.",
-      "Enter the email on your Rangers account. We will send a password setup link."
-    )
-    .replace(
-      /\s*<label>Phone Number On File<input id="forgotPasswordPhone" type="tel" autocomplete="tel" placeholder="Phone number" \/><\/label>/,
-      ""
-    )
-    .replace(
-      "If you are already on the member list, this will start your password setup. Enter the same phone number the league has on file.",
-      "If you are already on the member list, this will send a password setup link to your email."
-    )
-    .replace(
-      "This account needs a password setup. Enter your phone number to continue.",
-      "This account needs a password setup. Use Forgot password and we will send a setup link."
-    )
-    .replace(
-      'if (result.requiresPasswordSetup) {\n      document.querySelector("#forgotPasswordEmail").value = normalizeEmailInput(document.querySelector("#emailInput").value);',
-      'if (result.requiresPasswordSetup) {\n      document.querySelector("#forgotPasswordEmail").value = normalizeEmailInput(document.querySelector("#emailInput").value);\n      if (result.resetToken) {\n        inlineResetToken = result.resetToken;\n        showResetPanel();\n        loginStatus.textContent = result.message || "Temporary password accepted. Choose your own password now.";\n        document.querySelector("#resetPasswordInput").focus();\n        return;\n      }'
-    )
-    .replace(
-      'document.querySelector("#forgotPasswordPhone").value = "";',
-      ""
-    )
-    .replace(
-      'document.querySelector("#forgotPasswordPhone").focus();',
-      'document.querySelector("#forgotPasswordEmail").focus();'
-    )
-    .replace(
-      'const phone = document.querySelector("#forgotPasswordPhone").value.trim();',
-      'const phone = "";'
-    )
-    .replace(
-      'loginModal.classList.remove("hidden");\n  document.querySelector("#emailInput").focus();',
-      'loginModal.classList.remove("hidden");\n  loginModal.hidden = false;\n  document.querySelector("#emailInput").focus();'
-    )
-    .replace(
-      'loginModal.classList.remove("hidden");\n  document.querySelector("#resetPasswordInput").focus();',
-      'loginModal.classList.remove("hidden");\n  loginModal.hidden = false;\n  document.querySelector("#resetPasswordInput").focus();'
-    )
-    .replace(
-      '["loginPanel", "resetPanel", "forgotPasswordPanel", "forgotEmailPanel", "createAccountPanel"].forEach((id) => {\n    document.querySelector(`#${id}`).classList.toggle("hidden", id !== panelId);\n  });\n  document.querySelector(".login-links").classList.toggle("hidden", panelId !== "loginPanel");',
-      '["loginPanel", "resetPanel", "forgotPasswordPanel", "forgotEmailPanel", "createAccountPanel"].forEach((id) => {\n    const panel = document.querySelector(`#${id}`);\n    panel.classList.toggle("hidden", id !== panelId);\n    panel.hidden = id !== panelId;\n  });\n  const loginLinks = document.querySelector(".login-links");\n  loginLinks.classList.toggle("hidden", panelId !== "loginPanel");\n  loginLinks.hidden = panelId !== "loginPanel";'
-    )
-    .replace(
-      'function closeLoginModal() {\n  loginModal.classList.add("hidden");\n}',
-      'function closeLoginModal() {\n  loginModal.classList.add("hidden");\n  loginModal.hidden = true;\n}'
-    );
+  return String(body);
 }
 
 function readEmbeddedAsset(pathname) {
