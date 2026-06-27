@@ -205,7 +205,7 @@ async function ensurePrivateData() {
 
 async function loadRsvps() {
   if (!state.authed) return [];
-  const response = await fetch("api/rsvps", { cache: "no-store" });
+  const response = await fetch("api/rsvps", { cache: "no-store", credentials: "same-origin" });
   if (!response.ok) return [];
   const payload = await response.json();
   state.attendeeSummary = payload.attendeeSummary || {};
@@ -854,6 +854,7 @@ loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const response = await fetch("api/login", {
     method: "POST",
+    credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       email: normalizeEmailInput(document.querySelector("#emailInput").value),
@@ -903,6 +904,7 @@ document.querySelector("#sendResetLinkButton").addEventListener("click", async (
   loginStatus.textContent = "Checking your member account...";
   const response = await fetch("api/request-password-reset", {
     method: "POST",
+    credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, phone }),
   });
@@ -929,6 +931,7 @@ document.querySelector("#lookupEmailButton").addEventListener("click", async () 
   loginStatus.textContent = "Checking member list...";
   const response = await fetch("api/forgot-email", {
     method: "POST",
+    credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ lastName, phone }),
   });
@@ -953,6 +956,7 @@ document.querySelector("#sendAccountRequestButton").addEventListener("click", as
   loginStatus.textContent = "Sending account request...";
   const response = await fetch("api/account-request", {
     method: "POST",
+    credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, email, phone }),
   });
@@ -985,6 +989,7 @@ document.querySelector("#resetPasswordButton").addEventListener("click", async (
   loginStatus.textContent = "Saving new password...";
   const response = await fetch("api/reset-password", {
     method: "POST",
+    credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token, password }),
   });

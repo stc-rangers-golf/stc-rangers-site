@@ -577,6 +577,15 @@ async function handleApi(req, res, url) {
     if (tooManyAttempts(req)) return sendJson(res, 429, { ok: false, message: "Too many login attempts. Try again shortly." });
 
     const existingUser = findUser(payload.email);
+    if (existingUser && existingUser.passwordResetRequired) {
+      return sendJson(res, 403, {
+        ok: false,
+        requiresPasswordSetup: true,
+        resetToken: "",
+        message: "This migrated account needs a new Rangers password. Tap Forgot password, enter the phone number on file, and choose a new password.",
+      });
+    }
+
     const userRecord = verifyLoginRecord(payload.email, payload.password);
     if (!userRecord) {
       if (existingUser) {
@@ -995,7 +1004,7 @@ function serveStatic(req, res, url) {
 function patchIndexHtml(body) {
   return String(body)
     .replace(/styles\.css\?v=[^"]+/g, "styles.css?v=20260627b")
-    .replace(/app\.js\?v=[^"]+/g, "app.js?v=20260627b");
+    .replace(/app\.js\?v=[^"]+/g, "app.js?v=20260627c");
 }
 
 function patchClientApp(body) {
