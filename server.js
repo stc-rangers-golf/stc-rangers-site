@@ -469,6 +469,21 @@ function memberPhoneMatches(user, phone) {
   });
 }
 
+function memberLastNameMatches(user, lastName) {
+  const submitted = String(lastName || "").trim().toLowerCase();
+  if (submitted.length < 2) return false;
+  const candidates = [user.name];
+  const contacts = readJsonFile(contactsFile(), []);
+  contacts
+    .filter((contact) => normalizeEmail(contact.email) === normalizeEmail(user.email))
+    .forEach((contact) => candidates.push(contact.name));
+  return candidates.some((candidate) => {
+    const parts = String(candidate || "").toLowerCase().split(/\s+/).filter(Boolean);
+    const expected = parts[parts.length - 1] || "";
+    return expected === submitted;
+  });
+}
+
 function phoneDigitsClose(expected, submitted) {
   if (expected.length !== submitted.length || expected.length < 7) return false;
   let differences = 0;
@@ -582,7 +597,7 @@ async function handleApi(req, res, url) {
         ok: false,
         requiresPasswordSetup: true,
         resetToken: "",
-        message: "This migrated account needs a new Rangers password. Tap Forgot password, enter the phone number on file, and choose a new password.",
+        message: "This migrated account needs a new Rangers password. Tap Forgot password, enter the phone number and last name on file, and choose a new password.",
       });
     }
 
@@ -634,7 +649,9 @@ async function handleApi(req, res, url) {
       });
     }
     const entry = await createPasswordReset(req, user);
-    const canUseInlineReset = entry.delivery !== "sent" && memberPhoneMatches(user, payload.phone);
+    const verifiedByPhone = memberPhoneMatches(user, payload.phone);
+    const verifiedByLastName = Boolean(user.passwordResetRequired) && memberLastNameMatches(user, payload.lastName);
+    const canUseInlineReset = entry.delivery !== "sent" && (verifiedByPhone || verifiedByLastName);
     return sendJson(res, 200, {
       ok: true,
       delivery: entry.delivery,
@@ -643,8 +660,8 @@ async function handleApi(req, res, url) {
       message: entry.delivery === "sent"
         ? `Password setup link sent to ${user.email}. Check inbox and spam.`
         : canUseInlineReset
-          ? "Phone number verified. Choose a new password now."
-          : "Email delivery is unavailable right now. Enter the phone number on file so we can verify you here.",
+          ? `${verifiedByPhone ? "Phone number" : "Last name"} verified. Choose a new password now.`
+          : "Email delivery is unavailable right now. Enter the phone number and last name on file so we can verify you here.",
     });
   }
 

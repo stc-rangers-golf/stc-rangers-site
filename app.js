@@ -36,9 +36,10 @@ function ensureLoginModalMarkup() {
         </div>
         <div id="forgotPasswordPanel" class="hidden" hidden>
           <h2>Forgot Password</h2>
-          <p>Enter the email and phone number on your Rangers account. If email delivery is unavailable, your phone number lets you set the password here.</p>
+          <p>Enter the email, phone number, and last name on your Rangers account. If email delivery is unavailable, these details let you set the password here.</p>
           <label>Member Email<input id="forgotPasswordEmail" type="email" autocomplete="email" placeholder="member@email.com" /></label>
           <label>Phone Number On File<input id="forgotPasswordPhone" type="tel" autocomplete="tel" placeholder="Phone number" /></label>
+          <label>Last Name<input id="forgotPasswordLastName" type="text" autocomplete="family-name" placeholder="Last name" /></label>
           <div class="modal-actions">
             <button class="button button-red full" type="button" id="sendResetLinkButton">Continue</button>
             <button class="button button-outline full" type="button" data-login-back>Back To Login</button>
@@ -728,9 +729,13 @@ function renderProfile() {
       const currentPassword = view.querySelector("#currentPassword").value;
       const newPassword = view.querySelector("#newPassword").value;
       const confirmPassword = view.querySelector("#confirmPassword").value;
-      if (currentPassword || newPassword) {
+      if (newPassword || confirmPassword) {
         payload.currentPassword = currentPassword;
         payload.newPassword = newPassword;
+        if (!currentPassword) {
+          status.textContent = "Enter your current password to change it.";
+          return;
+        }
         if (newPassword !== confirmPassword) {
           status.textContent = "New password and confirmation do not match.";
           return;
@@ -874,6 +879,7 @@ loginForm.addEventListener("submit", async (event) => {
       }
       showLoginSubpanel("forgotPasswordPanel", result.message || "This account needs a password setup. Use Forgot password and we will send a setup link.");
       document.querySelector("#forgotPasswordPhone").value = "";
+      document.querySelector("#forgotPasswordLastName").value = "";
       document.querySelector("#forgotPasswordEmail").focus();
       return;
     }
@@ -897,6 +903,7 @@ document.querySelector("#forgotPasswordButton").addEventListener("click", () => 
 document.querySelector("#sendResetLinkButton").addEventListener("click", async () => {
   const email = normalizeEmailInput(document.querySelector("#forgotPasswordEmail").value);
   const phone = document.querySelector("#forgotPasswordPhone").value.trim();
+  const lastName = document.querySelector("#forgotPasswordLastName").value.trim();
   if (!email) {
     loginStatus.textContent = "Enter your member email address.";
     return;
@@ -906,7 +913,7 @@ document.querySelector("#sendResetLinkButton").addEventListener("click", async (
     method: "POST",
     credentials: "same-origin",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, phone }),
+    body: JSON.stringify({ email, phone, lastName }),
   });
   const result = await response.json().catch(() => ({}));
   if (response.ok && result.inlineReset && result.resetToken) {
