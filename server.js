@@ -704,7 +704,12 @@ async function handleApi(req, res, url) {
     const phone = normalizePhone(payload.phone);
     if (!lastName || phone.length < 7) return sendJson(res, 400, { ok: false, message: "Enter a last name and phone number." });
     const contacts = readJsonFile(contactsFile(), []);
-    const match = contacts.find((item) => String(item.name || "").toLowerCase().split(/\s+/).includes(lastName) && normalizePhone(item.phone).endsWith(phone.slice(-7)) && item.email);
+    const submittedLast = phone.slice(-7);
+    const match = contacts.find((item) => {
+      const contactPhoneLast = normalizePhone(item.phone).slice(-7);
+      const phoneMatches = contactPhoneLast === submittedLast || phoneDigitsClose(contactPhoneLast, submittedLast);
+      return String(item.name || "").toLowerCase().split(/\s+/).includes(lastName) && phoneMatches && item.email;
+    });
     if (!match) return sendJson(res, 404, { ok: false, message: "No matching member email was found. Please contact the committee." });
     return sendJson(res, 200, { ok: true, maskedEmail: maskEmail(match.email), message: `Your login email looks like ${maskEmail(match.email)}.` });
   }
