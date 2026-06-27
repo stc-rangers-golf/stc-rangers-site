@@ -352,17 +352,21 @@ a {
   padding: 0;
 }
 
-.standing-player-cell {
+.standing-rank-cell {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
+  min-width: 88px;
+}
+
+.standing-player-cell {
   min-width: 220px;
 }
 
 .standing-avatar {
-  width: 42px;
-  height: 42px;
-  flex: 0 0 42px;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
   border-radius: 50%;
   overflow: hidden;
   display: grid;

@@ -1041,8 +1041,8 @@ function serveStatic(req, res, url) {
 
 function patchIndexHtml(body) {
   return String(body)
-    .replace(/styles\.css\?v=[^"]+/g, "styles.css?v=20260627e")
-    .replace(/app\.js\?v=[^"]+/g, "app.js?v=20260627e");
+    .replace(/styles\.css\?v=[^"]+/g, "styles.css?v=20260627f")
+    .replace(/app\.js\?v=[^"]+/g, "app.js?v=20260627f");
 }
 
 function patchClientApp(body) {

@@ -437,13 +437,15 @@ function renderStandingRow(player) {
 
   return html`
     <tr>
-      <td>${escapeHtml(player.rank)}</td>
+      <td>
+        <div class="standing-rank-cell">
+          <span>${escapeHtml(player.rank)}</span>
+          <div class="standing-avatar">${photo}</div>
+        </div>
+      </td>
       <td>
         <div class="standing-player-cell">
-          <div class="standing-avatar">${photo}</div>
-          <div>
-            <button class="player-button" type="button" data-player="${escapeHtml(playerId)}">${escapeHtml(player.displayName)}</button><br />${contact}
-          </div>
+          <button class="player-button" type="button" data-player="${escapeHtml(playerId)}">${escapeHtml(player.displayName)}</button><br />${contact}
         </div>
       </td>
       <td>${escapeHtml(player.points)}</td>
