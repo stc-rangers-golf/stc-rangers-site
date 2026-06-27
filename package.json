@@ -1,0 +1,16 @@
+{
+  "name": "stc-rangers-standalone",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Standalone non-Wix STC Rangers Golf League site preview.",
+  "scripts": {
+    "start": "node server.js",
+    "build:data": "node scripts/build-data.js"
+  },
+  "dependencies": {
+    "nodemailer": "^9.0.1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

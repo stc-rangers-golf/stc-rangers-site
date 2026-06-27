@@ -1,0 +1,34 @@
+{
+  "currentUpdate": "June 17 results are loaded for member preview. June 24 and July 1 are league nights off.",
+  "weeklyPrizeWinners": {
+    "label": "June 17",
+    "twos": [
+      "Darren Miller",
+      "Daryl McDonell",
+      "Dennis Larocque",
+      "Steve Burling"
+    ],
+    "closestToPin": [
+      {
+        "hole": 4,
+        "name": "Casey Jarzabek",
+        "source": "Casey confirmed June 17"
+      },
+      {
+        "hole": 7,
+        "name": "Darren Miller",
+        "source": "Casey confirmed June 17"
+      }
+    ]
+  },
+  "weeklyNews": {
+    "headline": "League Schedule Update",
+    "body": "No golf June 24 or July 1; we will see you back on July 8. Thank you. Next sweeps week July 8th."
+  },
+  "memorial": {
+    "title": "Peter McBride Memorial",
+    "kicker": "Our leader, our friend.",
+    "body": "Gone but not forgotten.",
+    "closing": "RIP big chum."
+  }
+}

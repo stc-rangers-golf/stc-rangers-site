@@ -1,0 +1,35 @@
+{
+  "general": [
+    "Be ready and checked in before your tee time.",
+    "League play follows the weekly format posted on the homepage.",
+    "Closest-to-the-pin prizes are tracked on holes 4 and 7 unless posted otherwise.",
+    "Twos and prize winners are posted after results are confirmed.",
+    "Match play opponents are responsible for contacting each other and arranging match dates.",
+    "Completed match results should be reported to league scoring as soon as possible.",
+    "Respect the course, staff, league members, and pace of play."
+  ],
+  "weeklyScoring": [
+    "Weekly scores and match results are separate workflows. A match result should only be entered when a match was actually played and reported.",
+    "Weekly points come from the official scoring workbook. The website should display those workbook results instead of recalculating or guessing them.",
+    "The workbook sums each player's hole-by-hole Stableford points for the week.",
+    "Stableford points are based on adjusted score versus par using the workbook's 6, 5, 4, 3, 2, 1, 0 point ladder. Worse than bogey scores 0."
+  ],
+  "handicaps": [
+    "Weekly handicaps and handicap movement are calculated in the official league workbook from the weekly scoring sheets.",
+    "The website should show the current workbook handicap for each member, but it should not invent handicap movement from website data.",
+    "When standings are refreshed, handicap changes should be taken from the workbook results for that scoring week."
+  ],
+  "standings": [
+    "Final standings drop each player's two worst played scoring weeks.",
+    "Use the number of available scoring weeks actually played by the league, then subtract two.",
+    "Examples: 24 scoring weeks uses each player's best 22 weekly totals; 22 scoring weeks uses best 20; 18 scoring weeks uses best 16."
+  ],
+  "matchScoring": [
+    "A, B, and C Division matches use handicaps.",
+    "Take the handicap difference, multiply by 75%, then round to the nearest whole number. A .5 result and higher rounds up.",
+    "The higher-handicap player receives the resulting strokes.",
+    "Apply match strokes in this hole order: 2, 6, 5, 7, 1, 3, 8, 9, 4.",
+    "Example: a 12 handicap versus a 6 handicap is a difference of 6. Six multiplied by 75% is 4.5, so that rounds to 5 strokes on holes 2, 6, 5, 7, and 1.",
+    "Club Championship matches do not use handicaps. They are straight match play, with the lowest gross score winning each hole."
+  ]
+}
