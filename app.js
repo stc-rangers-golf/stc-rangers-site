@@ -172,6 +172,9 @@ async function renderRoute() {
   if (privateRoutes.has(state.route)) {
     await ensurePrivateData();
   }
+  if (state.route === "committee") {
+    state.data.committee = await loadJson("api/public/committee");
+  }
   if (state.route === "home") {
     await refreshPublicHome();
   }
@@ -428,10 +431,21 @@ function renderStandingRow(player) {
     ? `<span class="post-meta">${escapeHtml(player.contact.phone || "")}${player.contact.phone && player.contact.email ? " · " : ""}${escapeHtml(player.contact.email || "")}</span>`
     : "";
 
+  const photo = player.photoDataUrl
+    ? `<img src="${escapeHtml(player.photoDataUrl)}" alt="${escapeHtml(player.displayName)} profile photo" />`
+    : `<span>${escapeHtml(getInitials(player.displayName))}</span>`;
+
   return html`
     <tr>
       <td>${escapeHtml(player.rank)}</td>
-      <td><button class="player-button" type="button" data-player="${escapeHtml(playerId)}">${escapeHtml(player.displayName)}</button><br />${contact}</td>
+      <td>
+        <div class="standing-player-cell">
+          <div class="standing-avatar">${photo}</div>
+          <div>
+            <button class="player-button" type="button" data-player="${escapeHtml(playerId)}">${escapeHtml(player.displayName)}</button><br />${contact}
+          </div>
+        </div>
+      </td>
       <td>${escapeHtml(player.points)}</td>
       <td>${escapeHtml(player.handicap)}</td>
       <td>${escapeHtml(player.latestScore)}</td>
@@ -743,6 +757,8 @@ function renderProfile() {
       }
       const result = await postJson("api/me", payload, "PATCH");
       state.user = result.user;
+      state.privateLoaded = false;
+      state.data.committee = await loadJson("api/public/committee");
       status.textContent = "Profile saved.";
       renderProfile();
     } catch (error) {

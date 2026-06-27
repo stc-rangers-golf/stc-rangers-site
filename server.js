@@ -880,7 +880,9 @@ async function handleApi(req, res, url) {
     if (!isAuthed(req)) return sendJson(res, 401, { ok: false, message: "Login required." });
     const file = privateFile(privateMatch[1]);
     if (!file || !fs.existsSync(file)) return sendJson(res, 404, { ok: false, message: "Not found." });
-    const body = privateMatch[1] === "matches" ? patchMatches(fs.readFileSync(file, "utf8")) : fs.readFileSync(file);
+    let body = fs.readFileSync(file, "utf8");
+    if (privateMatch[1] === "matches") body = patchMatches(body);
+    if (privateMatch[1] === "standings") body = patchStandings(body);
     return send(res, 200, body, {
       "Content-Type": "application/json; charset=utf-8",
       "Cache-Control": "no-store",
@@ -888,6 +890,20 @@ async function handleApi(req, res, url) {
   }
 
   return sendJson(res, 404, { ok: false, message: "Unknown API route." });
+}
+
+function patchStandings(body) {
+  const standings = JSON.parse(body);
+  const users = loadUsers();
+  const usersByEmail = new Map(users.map((user) => [normalizeEmail(user.email), user]));
+  const usersByName = new Map(users.map((user) => [String(user.name || "").trim().toLowerCase(), user]));
+  return JSON.stringify(standings.map((player) => {
+    const email = normalizeEmail(player.contact && player.contact.email);
+    const byEmail = email ? usersByEmail.get(email) : null;
+    const byName = usersByName.get(String(player.displayName || "").trim().toLowerCase());
+    const photoDataUrl = (byEmail && byEmail.photoDataUrl) || (byName && byName.photoDataUrl) || "";
+    return photoDataUrl ? { ...player, photoDataUrl } : player;
+  }));
 }
 
 function patchMatches(body) {
@@ -1025,8 +1041,8 @@ function serveStatic(req, res, url) {
 
 function patchIndexHtml(body) {
   return String(body)
-    .replace(/styles\.css\?v=[^"]+/g, "styles.css?v=20260627d")
-    .replace(/app\.js\?v=[^"]+/g, "app.js?v=20260627d");
+    .replace(/styles\.css\?v=[^"]+/g, "styles.css?v=20260627e")
+    .replace(/app\.js\?v=[^"]+/g, "app.js?v=20260627e");
 }
 
 function patchClientApp(body) {
