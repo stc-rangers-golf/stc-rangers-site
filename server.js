@@ -402,6 +402,40 @@ function normalizePhone(value) {
   return String(value || "").replace(/\D/g, "");
 }
 
+function normalizeMemberName(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ");
+}
+
+function memberNameMatches(user, name) {
+  const submitted = normalizeMemberName(name);
+  if (!submitted) return false;
+  const candidates = [user.name];
+  const contacts = readJsonFile(contactsFile(), []);
+  contacts
+    .filter((contact) => normalizeEmail(contact.email) === normalizeEmail(user.email))
+    .forEach((contact) => candidates.push(contact.name));
+  return candidates.some((candidate) => normalizeMemberName(candidate) === submitted);
+}
+
+function findKnownMemberByNamePhone(name, phone) {
+  return loadUsers().find((user) => memberNameMatches(user, name) && memberPhoneMatches(user, phone));
+}
+
+function updateMemberLoginEmail(user, email) {
+  const normalizedEmail = normalizeEmail(email);
+  if (!user || !normalizedEmail || normalizeEmail(user.email) === normalizedEmail) return user;
+  const users = loadUsers();
+  const index = users.findIndex((item) => normalizeEmail(item.email) === normalizeEmail(user.email));
+  if (index === -1) return user;
+  users[index].email = normalizedEmail;
+  writeUsers(users);
+  return users[index];
+}
+
 function maskEmail(email) {
   const [name, domain] = String(email || "").split("@");
   if (!name || !domain) return "";
@@ -726,18 +760,27 @@ async function handleApi(req, res, url) {
     const email = normalizeEmail(payload.email);
     const phone = String(payload.phone || "").trim();
     if (!name || !email.includes("@")) return sendJson(res, 400, { ok: false, message: "Enter your name and email." });
-    const existingUser = findUser(email);
+    let existingUser = findUser(email);
+    let matchedExistingByNamePhone = false;
+    if (!existingUser) {
+      const knownMember = findKnownMemberByNamePhone(name, phone);
+      if (knownMember) {
+        existingUser = updateMemberLoginEmail(knownMember, email);
+        matchedExistingByNamePhone = true;
+      }
+    }
     if (existingUser) {
       const entry = await createPasswordReset(req, existingUser);
       const canUseInlineReset = entry.delivery !== "sent" && memberPhoneMatches(existingUser, phone);
       return sendJson(res, 200, {
         ok: true,
         existingMember: true,
+        matchedExistingByNamePhone,
         delivery: entry.delivery,
         inlineReset: canUseInlineReset,
         resetToken: canUseInlineReset ? entry.resetToken : "",
         message: entry.delivery === "sent"
-          ? `You already have a member account. A password setup link was sent to ${existingUser.email}.`
+          ? `Member account found. A password setup link was sent to ${existingUser.email}.`
           : canUseInlineReset
             ? "Member account found and phone number verified. Choose a password now."
             : "You already have a member account, but email delivery is unavailable right now. Use Forgot password with the phone number on file.",
