@@ -173,6 +173,9 @@ async function renderRoute() {
   if (privateRoutes.has(state.route)) {
     await ensurePrivateData();
   }
+  if (state.route === "home" && state.authed) {
+    await ensurePrivateData();
+  }
   if (state.route === "committee") {
     state.data.committee = await loadJson("api/public/committee");
   }
@@ -248,8 +251,23 @@ function renderHome() {
   const twos = home.weeklyPrizeWinners.twos.length
     ? home.weeklyPrizeWinners.twos.map((name) => `<li>Two: ${escapeHtml(name)}</li>`).join("")
     : "<li>No twos posted.</li>";
-  const pins = home.weeklyPrizeWinners.closestToPin
-    .map((winner) => `<li>Closest #${escapeHtml(winner.hole)}: ${escapeHtml(winner.name)}</li>`)
+  const pinHighlights = home.weeklyPrizeWinners.closestToPin
+    .map((winner) => {
+      const label = `Hole ${winner.hole}`;
+      const photoDataUrl = findMemberPhoto(winner.name);
+      const photo = photoDataUrl
+        ? `<img src="${escapeHtml(photoDataUrl)}" alt="${escapeHtml(winner.name)} closest to the pin winner" />`
+        : `<span>${escapeHtml(getInitials(winner.name))}</span>`;
+      return html`
+        <div class="pin-winner-card">
+          <div class="pin-winner-photo">${photo}</div>
+          <div>
+            <strong>${escapeHtml(label)}</strong>
+            <span>${escapeHtml(winner.name)}</span>
+          </div>
+        </div>
+      `;
+    })
     .join("");
 
   view.innerHTML = html`
@@ -262,7 +280,11 @@ function renderHome() {
           <article class="glass-panel">
             <h2 class="panel-title">Weekly Prize Winners</h2>
             <p><strong>${escapeHtml(home.weeklyPrizeWinners.label)}</strong></p>
-            <ul class="prize-list">${twos}${pins}</ul>
+            <ul class="prize-list">${twos}</ul>
+            <div class="pin-winner-strip" aria-label="Closest to the pin photo highlights">
+              <p>Closest to the Pins</p>
+              <div class="pin-winner-grid">${pinHighlights}</div>
+            </div>
           </article>
           <article class="glass-panel">
             <h2 class="panel-title">Latest League News</h2>
@@ -437,6 +459,24 @@ function getInitials(name) {
     .slice(0, 2)
     .map((part) => part.slice(0, 1).toUpperCase())
     .join("");
+}
+
+function normalizePersonName(name) {
+  return String(name || "").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function findMemberPhoto(name) {
+  const target = normalizePersonName(name);
+  if (!target) return "";
+  if (normalizePersonName(state.user?.name) === target && state.user?.photoDataUrl) return state.user.photoDataUrl;
+
+  const players = Array.isArray(state.data.standings) ? state.data.standings : [];
+  const player = players.find((item) => normalizePersonName(item.displayName) === target);
+  if (player?.photoDataUrl) return player.photoDataUrl;
+
+  const contacts = Array.isArray(state.data.contacts) ? state.data.contacts : [];
+  const contact = contacts.find((item) => normalizePersonName(item.name) === target);
+  return contact?.photoDataUrl || "";
 }
 
 function renderLocked(route) {
