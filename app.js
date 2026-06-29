@@ -539,15 +539,28 @@ function findCurrentMemberMatches() {
   const matches = Array.isArray(state.data.matches) ? state.data.matches : [];
   return matches
     .filter((match) => {
+      if (!isCurrentMemberInMatch(match)) return false;
+      if (isAwaitingOpponentMatch(match)) return true;
       if (String(match.status || "").toLowerCase() === "complete") return false;
       if (isBracketVacancy(match)) return false;
-      return isCurrentMemberName(match.playerOne)
-        || isCurrentMemberName(match.playerTwo)
-        || isCurrentMemberContact(match.contacts?.[match.playerOne])
-        || isCurrentMemberContact(match.contacts?.[match.playerTwo]);
+      return true;
     })
     .sort((a, b) => getRoundNumber(a) - getRoundNumber(b))
     .slice(0, 2);
+}
+
+function isCurrentMemberInMatch(match) {
+  return isCurrentMemberName(match.playerOne)
+        || isCurrentMemberName(match.playerTwo)
+        || isCurrentMemberContact(match.contacts?.[match.playerOne])
+        || isCurrentMemberContact(match.contacts?.[match.playerTwo]);
+}
+
+function isAwaitingOpponentMatch(match) {
+  if (!isBracketVacancy(match)) return false;
+  const status = String(match.status || "").toLowerCase();
+  if (status === "complete" && !isCurrentMemberName(match.winner)) return false;
+  return true;
 }
 
 function findNextRsvp() {
@@ -558,6 +571,7 @@ function findNextRsvp() {
 }
 
 function getMatchOpponent(match) {
+  if (isAwaitingOpponentMatch(match)) return "Awaiting opponent";
   if (isCurrentMemberName(match.playerOne) || isCurrentMemberContact(match.contacts?.[match.playerOne])) {
     return match.playerTwo || "Opponent TBD";
   }
@@ -569,7 +583,8 @@ function getMatchOpponent(match) {
 
 function getMatchLabel(match) {
   const competition = match.competition === "Division" ? `${match.division} Division` : match.competition;
-  return `${competition || "Match"} · ${match.round || "Round pending"}`;
+  const suffix = isAwaitingOpponentMatch(match) ? " · awaiting opponent" : "";
+  return `${competition || "Match"} · ${match.round || "Round pending"}${suffix}`;
 }
 
 function isCurrentMemberName(name) {
