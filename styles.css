@@ -204,6 +204,88 @@ a {
   padding: 24px;
 }
 
+.glance-strip {
+  margin: 30px auto 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+  gap: 10px;
+  max-width: 920px;
+  text-align: left;
+  text-shadow: none;
+}
+
+.glance-item,
+.member-snapshot article {
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 8px;
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.18);
+}
+
+.glance-item {
+  padding: 14px 16px;
+  border-top: 4px solid var(--red-600);
+}
+
+.glance-item span,
+.member-snapshot article > span {
+  display: block;
+  color: #65718a;
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.glance-item strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--blue-900);
+  font-size: 1.05rem;
+}
+
+.member-snapshot {
+  margin: 18px auto 0;
+  display: grid;
+  grid-template-columns: 1.25fr 1fr 1fr;
+  gap: 12px;
+  max-width: 920px;
+  text-align: left;
+  text-shadow: none;
+}
+
+.member-snapshot article {
+  padding: 16px;
+}
+
+.member-snapshot strong {
+  display: block;
+  color: var(--blue-900);
+  font-size: 1rem;
+  line-height: 1.15;
+}
+
+.member-snapshot p {
+  margin: 4px 0 0;
+  color: #59657c;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.snapshot-match-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.snapshot-match {
+  padding: 9px 10px;
+  border-radius: 8px;
+  background: #eef3ff;
+  border-left: 4px solid var(--red-600);
+}
+
 .panel-title {
   margin: 0 0 16px;
   color: var(--blue-900);
@@ -220,6 +302,34 @@ a {
 .prize-list li,
 .rules-list li {
   margin: 7px 0;
+}
+
+.prize-list-compact {
+  columns: 2;
+  column-gap: 22px;
+}
+
+.winner-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.winner-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 42px;
+  min-height: 34px;
+  border-radius: 8px;
+  background: var(--red-600);
+  color: white;
+  font-weight: 950;
+}
+
+.winner-note {
+  color: #65718a;
+  font-weight: 850;
 }
 
 .pin-winner-strip {
@@ -1029,6 +1139,18 @@ a {
     grid-template-columns: 1fr;
   }
 
+  .glance-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .member-snapshot {
+    grid-template-columns: 1fr;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
   .hero-copy {
     text-align: left;
   }
@@ -1046,6 +1168,14 @@ a {
 
   .pin-winner-grid {
     grid-template-columns: 1fr;
+  }
+
+  .glance-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .prize-list-compact {
+    columns: 1;
   }
 
   .main-nav a,

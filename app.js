@@ -248,6 +248,12 @@ function escapeHtml(value) {
 
 function renderHome() {
   const { home } = state.data;
+  const thisWeekItems = [
+    ["Next League Night", "July 8"],
+    ["Feature", "Sweeps Week"],
+    ["Round 2 Matches", "Due July 15"],
+    ["Next Tournament", "Rockway · July 25"],
+  ];
   const twos = home.weeklyPrizeWinners.twos.length
     ? home.weeklyPrizeWinners.twos.map((name) => `<li>Two: ${escapeHtml(name)}</li>`).join("")
     : "<li>No twos posted.</li>";
@@ -276,11 +282,24 @@ function renderHome() {
         <h1>Welcome to the St. Catharines Rangers Golf League</h1>
         <div class="hero-rule"></div>
         <p class="hero-subtitle">Fun, Friendship &amp; Fairways Since 1978</p>
+        <div class="glance-strip" aria-label="This week at a glance">
+          ${thisWeekItems.map(([label, value]) => `
+            <div class="glance-item">
+              <span>${escapeHtml(label)}</span>
+              <strong>${escapeHtml(value)}</strong>
+            </div>
+          `).join("")}
+        </div>
+        ${state.authed ? renderMemberSnapshot() : ""}
         <div class="home-panels">
           <article class="glass-panel">
             <h2 class="panel-title">Weekly Prize Winners</h2>
             <p><strong>${escapeHtml(home.weeklyPrizeWinners.label)}</strong></p>
-            <ul class="prize-list">${twos}</ul>
+            <div class="winner-badge-row">
+              <span class="winner-badge">2s</span>
+              <span class="winner-note">Members who carded a two</span>
+            </div>
+            <ul class="prize-list prize-list-compact">${twos}</ul>
             <div class="pin-winner-strip" aria-label="Closest to the pin photo highlights">
               <p>Closest to the Pins</p>
               <div class="pin-winner-grid">${pinHighlights}</div>
@@ -301,6 +320,38 @@ function renderHome() {
           <strong>${escapeHtml(home.memorial.closing)}</strong>
         </div>
       </aside>
+    </section>
+  `;
+}
+
+function renderMemberSnapshot() {
+  const player = findCurrentStanding();
+  const nextMatches = findCurrentMemberMatches();
+  const nextRsvp = findNextRsvp();
+  const matchRows = nextMatches.length
+    ? nextMatches.map((match) => `
+      <div class="snapshot-match">
+        <strong>${escapeHtml(getMatchOpponent(match))}</strong>
+        <p>${escapeHtml(getMatchLabel(match))}</p>
+      </div>
+    `).join("")
+    : `<div class="snapshot-match"><strong>No pending match</strong><p>You are clear for now.</p></div>`;
+  return html`
+    <section class="member-snapshot" aria-label="Member snapshot">
+      <article>
+        <span>Your Next Match${nextMatches.length > 1 ? "es" : ""}</span>
+        <div class="snapshot-match-list">${matchRows}</div>
+      </article>
+      <article>
+        <span>Your Standings</span>
+        <strong>${escapeHtml(player ? `${player.flight} Flight · #${player.rank}` : "Not listed yet")}</strong>
+        <p>${escapeHtml(player ? `${player.points} points · ${player.handicap} handicap` : "Check standings after the next update.")}</p>
+      </article>
+      <article>
+        <span>Your Next Tournament</span>
+        <strong>${escapeHtml(nextRsvp ? nextRsvp.tournamentTitle : "No RSVP yet")}</strong>
+        <p>${escapeHtml(nextRsvp ? `${nextRsvp.eventDate} · ${nextRsvp.status}` : "Visit Tournaments to RSVP.")}</p>
+      </article>
     </section>
   `;
 }
@@ -477,6 +528,70 @@ function findMemberPhoto(name) {
   const contacts = Array.isArray(state.data.contacts) ? state.data.contacts : [];
   const contact = contacts.find((item) => normalizePersonName(item.name) === target);
   return contact?.photoDataUrl || "";
+}
+
+function findCurrentStanding() {
+  const players = Array.isArray(state.data.standings) ? state.data.standings : [];
+  return players.find((player) => isCurrentMemberName(player.displayName) || isCurrentMemberEmail(player.contact?.email));
+}
+
+function findCurrentMemberMatches() {
+  const matches = Array.isArray(state.data.matches) ? state.data.matches : [];
+  return matches
+    .filter((match) => {
+      if (String(match.status || "").toLowerCase() === "complete") return false;
+      if (isBracketVacancy(match)) return false;
+      return isCurrentMemberName(match.playerOne)
+        || isCurrentMemberName(match.playerTwo)
+        || isCurrentMemberContact(match.contacts?.[match.playerOne])
+        || isCurrentMemberContact(match.contacts?.[match.playerTwo]);
+    })
+    .sort((a, b) => getRoundNumber(a) - getRoundNumber(b))
+    .slice(0, 2);
+}
+
+function findNextRsvp() {
+  const rsvps = Array.isArray(state.rsvps) ? state.rsvps : [];
+  return rsvps
+    .filter((rsvp) => rsvp.status === "Going" || rsvp.status === "Maybe")
+    .sort((a, b) => parseEventDate(a.eventDate) - parseEventDate(b.eventDate))[0] || null;
+}
+
+function getMatchOpponent(match) {
+  if (isCurrentMemberName(match.playerOne) || isCurrentMemberContact(match.contacts?.[match.playerOne])) {
+    return match.playerTwo || "Opponent TBD";
+  }
+  if (isCurrentMemberName(match.playerTwo) || isCurrentMemberContact(match.contacts?.[match.playerTwo])) {
+    return match.playerOne || "Opponent TBD";
+  }
+  return "Opponent TBD";
+}
+
+function getMatchLabel(match) {
+  const competition = match.competition === "Division" ? `${match.division} Division` : match.competition;
+  return `${competition || "Match"} · ${match.round || "Round pending"}`;
+}
+
+function isCurrentMemberName(name) {
+  const target = normalizePersonName(name);
+  return Boolean(target && target === normalizePersonName(state.user?.name));
+}
+
+function isCurrentMemberEmail(email) {
+  return Boolean(email && state.user?.email && normalizeEmailInput(email) === normalizeEmailInput(state.user.email));
+}
+
+function isCurrentMemberContact(contact) {
+  return Boolean(contact && (isCurrentMemberEmail(contact.email) || isCurrentMemberName(contact.name)));
+}
+
+function getRoundNumber(match) {
+  return Number(String(match.round || "").match(/\d+/)?.[0] || 99);
+}
+
+function parseEventDate(value) {
+  const time = Date.parse(String(value || ""));
+  return Number.isNaN(time) ? Number.MAX_SAFE_INTEGER : time;
 }
 
 function renderLocked(route) {
