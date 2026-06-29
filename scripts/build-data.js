@@ -94,7 +94,7 @@ const publicHome = {
     title: "Peter McBride Memorial",
     kicker: "Our leader, our friend.",
     body: "Gone but not forgotten.",
-    closing: "RIP big chum.",
+    closing: "RIP Big Chum.",
   },
 };
 
