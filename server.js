@@ -430,14 +430,42 @@ function findKnownMemberByNamePhone(name, phone) {
   return loadUsers().find((user) => memberNameMatches(user, name) && memberPhoneMatches(user, phone));
 }
 
+function syncContactRecord(previousEmail, user) {
+  if (!user || !normalizeEmail(user.email)) return;
+  const contacts = readJsonFile(contactsFile(), []);
+  const previous = normalizeEmail(previousEmail);
+  const next = normalizeEmail(user.email);
+  let index = contacts.findIndex((contact) => normalizeEmail(contact.email) === previous);
+  if (index === -1) {
+    const userName = normalizeMemberName(user.name);
+    const userPhone = normalizePhone(user.phone);
+    index = contacts.findIndex((contact) => {
+      const nameMatches = userName && normalizeMemberName(contact.name) === userName;
+      const phoneMatches = userPhone && normalizePhone(contact.phone).slice(-7) === userPhone.slice(-7);
+      return nameMatches && phoneMatches;
+    });
+  }
+  const nextContact = {
+    ...(index === -1 ? {} : contacts[index]),
+    name: user.name || (index === -1 ? "" : contacts[index].name),
+    email: next,
+    phone: user.phone || (index === -1 ? "" : contacts[index].phone),
+  };
+  if (index === -1) contacts.push(nextContact);
+  else contacts[index] = nextContact;
+  writeJsonFile(contactsFile(), contacts);
+}
+
 function updateMemberLoginEmail(user, email) {
   const normalizedEmail = normalizeEmail(email);
   if (!user || !normalizedEmail || normalizeEmail(user.email) === normalizedEmail) return user;
+  const previousEmail = user.email;
   const users = loadUsers();
   const index = users.findIndex((item) => normalizeEmail(item.email) === normalizeEmail(user.email));
   if (index === -1) return user;
   users[index].email = normalizedEmail;
   writeUsers(users);
+  syncContactRecord(previousEmail, users[index]);
   return users[index];
 }
 
@@ -822,12 +850,13 @@ async function handleApi(req, res, url) {
       const index = users.findIndex((item) => String(item.email || "").toLowerCase() === String(user.email || "").toLowerCase());
       if (index === -1) return sendJson(res, 404, { ok: false, message: "User not found." });
       const existing = users[index];
+      const previousEmail = existing.email;
       if (payload.name !== undefined) existing.name = String(payload.name || "").trim();
       if (payload.phone !== undefined) existing.phone = String(payload.phone || "").trim();
       if (payload.email !== undefined) {
-        const nextEmail = String(payload.email || "").trim().toLowerCase();
+        const nextEmail = normalizeEmail(payload.email);
         if (!nextEmail.includes("@")) return sendJson(res, 400, { ok: false, message: "Enter a valid email." });
-        const duplicate = users.some((item, i) => i !== index && String(item.email || "").toLowerCase() === nextEmail);
+        const duplicate = users.some((item, i) => i !== index && normalizeEmail(item.email) === nextEmail);
         if (duplicate) return sendJson(res, 409, { ok: false, message: "That email is already in use." });
         existing.email = nextEmail;
       }
@@ -848,6 +877,7 @@ async function handleApi(req, res, url) {
       }
       users[index] = existing;
       writeUsers(users);
+      syncContactRecord(previousEmail, existing);
       const nextUser = publicUser(existing);
       const { sid } = createSessionForUser(req, nextUser);
       return sendJson(res, 200, { ok: true, user: nextUser }, {
