@@ -333,6 +333,7 @@ function renderMemberSnapshot() {
       <div class="snapshot-match">
         <strong>${escapeHtml(getMatchOpponent(match))}</strong>
         <p>${escapeHtml(getMatchLabel(match))}</p>
+        ${renderOpponentHandicap(match)}
       </div>
     `).join("")
     : `<div class="snapshot-match"><strong>No pending match</strong><p>You are clear for now.</p></div>`;
@@ -579,6 +580,26 @@ function getMatchOpponent(match) {
     return match.playerOne || "Opponent TBD";
   }
   return "Opponent TBD";
+}
+
+function renderOpponentHandicap(match) {
+  const handicap = getOpponentHandicap(match);
+  return handicap === "" ? "" : `<p class="snapshot-handicap">Opponent handicap: ${escapeHtml(handicap)}</p>`;
+}
+
+function getOpponentHandicap(match) {
+  if (isAwaitingOpponentMatch(match)) return "";
+  if (isCurrentMemberName(match.playerOne) || isCurrentMemberContact(match.contacts?.[match.playerOne])) {
+    return formatHandicap(match.playerTwoHandicap);
+  }
+  if (isCurrentMemberName(match.playerTwo) || isCurrentMemberContact(match.contacts?.[match.playerTwo])) {
+    return formatHandicap(match.playerOneHandicap);
+  }
+  return "";
+}
+
+function formatHandicap(value) {
+  return value === undefined || value === null || value === "" ? "" : String(value);
 }
 
 function getMatchLabel(match) {

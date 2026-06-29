@@ -286,6 +286,12 @@ a {
   border-left: 4px solid var(--red-600);
 }
 
+.member-snapshot .snapshot-handicap {
+  color: var(--blue-900);
+  font-size: 0.84rem;
+  font-weight: 950;
+}
+
 .panel-title {
   margin: 0 0 16px;
   color: var(--blue-900);
