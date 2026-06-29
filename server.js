@@ -461,6 +461,17 @@ function findKnownMemberByNamePhone(name, phone) {
   return loadUsers().find((user) => memberNameMatches(user, name) && memberPhoneMatches(user, phone));
 }
 
+function findKnownMemberForSignup(name, phone) {
+  const phoneMatch = findKnownMemberByNamePhone(name, phone);
+  if (phoneMatch) return { user: phoneMatch, verifiedBy: "name-phone" };
+
+  const submittedName = normalizeMemberName(name);
+  if (!submittedName) return null;
+  const nameMatches = loadUsers().filter((user) => memberNameMatches(user, name));
+  if (nameMatches.length !== 1) return null;
+  return { user: nameMatches[0], verifiedBy: "unique-name" };
+}
+
 function syncContactRecord(previousEmail, user) {
   if (!user || !normalizeEmail(user.email)) return;
   const contacts = readJsonFile(contactsFile(), []);
@@ -831,27 +842,30 @@ async function handleApi(req, res, url) {
     if (!name || !email.includes("@")) return sendJson(res, 400, { ok: false, message: "Enter your name and email." });
     let existingUser = findUser(email);
     let matchedExistingByNamePhone = false;
+    let matchedExistingByUniqueName = false;
     if (!existingUser) {
-      const knownMember = findKnownMemberByNamePhone(name, phone);
+      const knownMember = findKnownMemberForSignup(name, phone);
       if (knownMember) {
-        existingUser = updateMemberLoginEmail(knownMember, email);
-        matchedExistingByNamePhone = true;
+        existingUser = updateMemberLoginEmail(knownMember.user, email);
+        matchedExistingByNamePhone = knownMember.verifiedBy === "name-phone";
+        matchedExistingByUniqueName = knownMember.verifiedBy === "unique-name";
       }
     }
     if (existingUser) {
       const entry = await createPasswordReset(req, existingUser);
-      const canUseInlineReset = entry.delivery !== "sent" && memberPhoneMatches(existingUser, phone);
+      const canUseInlineReset = entry.delivery !== "sent" && (memberPhoneMatches(existingUser, phone) || matchedExistingByUniqueName);
       return sendJson(res, 200, {
         ok: true,
         existingMember: true,
         matchedExistingByNamePhone,
+        matchedExistingByUniqueName,
         delivery: entry.delivery,
         inlineReset: canUseInlineReset,
         resetToken: canUseInlineReset ? entry.resetToken : "",
         message: entry.delivery === "sent"
           ? `Member account found. A password setup link was sent to ${existingUser.email}.`
           : canUseInlineReset
-            ? "Member account found and phone number verified. Choose a password now."
+            ? "Member account found. Choose a password now."
             : "You already have a member account, but email delivery is unavailable right now. Use Forgot password with the phone number on file.",
       });
     }
