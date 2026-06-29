@@ -275,6 +275,37 @@ function storeOrdersFile() {
   return seedDataFile("private", "store-orders.local.json");
 }
 
+function rangersRickAuthorized(req, url) {
+  const expected = process.env.RANGERS_RICK_API_KEY || "";
+  if (!expected) return false;
+  const auth = String(req.headers.authorization || "");
+  const supplied = auth.startsWith("Bearer ")
+    ? auth.slice("Bearer ".length).trim()
+    : String(req.headers["x-rangers-rick-key"] || url.searchParams.get("key") || "").trim();
+  if (!supplied) return false;
+  const expectedBuffer = Buffer.from(expected);
+  const suppliedBuffer = Buffer.from(supplied);
+  return expectedBuffer.length === suppliedBuffer.length && crypto.timingSafeEqual(expectedBuffer, suppliedBuffer);
+}
+
+function rangersRickSnapshot() {
+  const standings = JSON.parse(patchStandings(fs.readFileSync(privateFile("standings"), "utf8")));
+  const matches = JSON.parse(patchMatches(fs.readFileSync(privateFile("matches"), "utf8")));
+  return {
+    ok: true,
+    generatedAt: new Date().toISOString(),
+    source: "stcrangers.ca",
+    publicHome: readJsonFile(seedDataFile("public", "home.json"), {}),
+    standings,
+    matches,
+    weekly: readJsonFile(privateFile("weekly"), []),
+    tournaments: readJsonFile(privateFile("tournaments"), []),
+    tournamentRsvps: readJsonFile(rsvpsFile(), []),
+    rant: readJsonFile(privateFile("rant"), []),
+    contacts: readJsonFile(privateFile("contacts"), []),
+  };
+}
+
 async function deliverEmail(message) {
   const httpDelivery = await deliverEmailOverHttp(message);
   if (httpDelivery) return httpDelivery;
@@ -629,6 +660,11 @@ async function handleApi(req, res, url) {
       emailConfigured: Boolean(process.env.SMTP_HOST || process.env.STC_EMAIL_WEBHOOK_URL || process.env.RESEND_API_KEY),
       users: loadUsers().length,
     });
+  }
+
+  if (url.pathname === "/api/rangers-rick/snapshot" && req.method === "GET") {
+    if (!rangersRickAuthorized(req, url)) return sendJson(res, 404, { ok: false, message: "Not found." });
+    return sendJson(res, 200, rangersRickSnapshot());
   }
 
   if (url.pathname === "/api/session") {
