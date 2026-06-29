@@ -77,12 +77,13 @@ function ensureLoginModalMarkup() {
   `);
 }
 
-const routes = new Set(["home", "rules", "committee", "standings", "matches", "tournaments", "rant", "profile"]);
+const routes = new Set(["home", "rules", "committee", "store", "standings", "matches", "tournaments", "rant", "profile"]);
 const privateRoutes = new Set(["standings", "matches", "tournaments", "rant", "profile"]);
 const pathRoutes = new Map([
   ["/home", "home"],
   ["/rules", "rules"],
   ["/committee", "committee"],
+  ["/store", "store"],
   ["/standings", "standings"],
   ["/matches", "matches"],
   ["/tournaments", "tournaments"],
@@ -182,6 +183,7 @@ async function renderRoute() {
     home: renderHome,
     rules: renderRules,
     committee: renderCommittee,
+    store: renderStore,
     standings: renderStandings,
     matches: renderMatches,
     tournaments: renderTournaments,
@@ -345,6 +347,87 @@ function renderCommittee() {
       </div>
     </section>
   `;
+}
+
+async function renderStore() {
+  const store = state.data.store || await loadJson("data/public/store.json");
+  state.data.store = store;
+  const products = store.products || [];
+  view.innerHTML = html`
+    <section class="page">
+      <div class="page-head">
+        <div>
+          <h1>Store</h1>
+          <p class="page-lede">Rangers gear and league items. The current shirt order is handled through the official Promotions Plus / OrderMyGear store.</p>
+        </div>
+        <a class="button button-outline" href="#home">Home</a>
+      </div>
+      <div class="store-grid">
+        ${products.map(renderStoreProduct).join("")}
+      </div>
+    </section>
+  `;
+  view.querySelectorAll("[data-store-form]").forEach((form) => {
+    form.addEventListener("submit", handleStoreRequest);
+  });
+}
+
+function renderStoreProduct(product) {
+  const sizes = (product.sizes || []).map((size) => `<option value="${escapeHtml(size)}">${escapeHtml(size)}</option>`).join("");
+  const price = product.priceText || (product.price ? `$${Number(product.price).toFixed(2)}` : "Price to be confirmed");
+  return html`
+    <article class="panel store-card">
+      <div class="store-media">
+        <img src="${escapeHtml(product.image)}" alt="${escapeHtml(product.title)}" />
+        ${product.badge ? `<span class="store-badge">${escapeHtml(product.badge)}</span>` : ""}
+      </div>
+      <div class="store-details">
+        <p class="store-kicker">${escapeHtml(product.kicker || "Rangers Store")}</p>
+        <h2 class="panel-title">${escapeHtml(product.title)}</h2>
+        <p class="store-price">${escapeHtml(price)}</p>
+        <p>${escapeHtml(product.description || "")}</p>
+        ${product.deadline ? `<p class="store-deadline"><strong>Deadline:</strong> ${escapeHtml(product.deadline)}</p>` : ""}
+        ${product.externalUrl ? `<a class="button button-red" href="${escapeHtml(product.externalUrl)}" target="_blank" rel="noopener">Order Shirt</a>` : ""}
+        <form class="store-form" data-store-form data-product-id="${escapeHtml(product.id)}">
+          <h3>Future Store Request</h3>
+          <p class="page-lede">Use this if you want the committee to follow up, or for future Rangers items listed here.</p>
+          <div class="store-form-grid">
+            <label>Name <input name="name" value="${escapeHtml(state.user?.name || "")}" required /></label>
+            <label>Email <input name="email" type="email" value="${escapeHtml(state.user?.email || "")}" required /></label>
+            <label>Phone <input name="phone" value="${escapeHtml(state.user?.phone || "")}" /></label>
+            <label>Size <select name="size">${sizes}</select></label>
+            <label>Quantity <input name="quantity" type="number" min="1" max="20" value="1" /></label>
+          </div>
+          <label>Notes <textarea name="notes" placeholder="Pickup notes, extra sizing questions, or future item requests"></textarea></label>
+          <button class="button button-outline full" type="submit">Send Store Request</button>
+          <p class="login-status" data-store-status role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </article>
+  `;
+}
+
+async function handleStoreRequest(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const status = form.querySelector("[data-store-status]");
+  const formData = new FormData(form);
+  status.textContent = "Saving request...";
+  try {
+    const result = await postJson("api/store-orders", {
+      productId: form.dataset.productId,
+      name: formData.get("name"),
+      email: formData.get("email"),
+      phone: formData.get("phone"),
+      size: formData.get("size"),
+      quantity: formData.get("quantity"),
+      notes: formData.get("notes"),
+    });
+    status.textContent = result.message || "Store request saved.";
+    form.reset();
+  } catch (error) {
+    status.textContent = error.message;
+  }
 }
 
 function getInitials(name) {

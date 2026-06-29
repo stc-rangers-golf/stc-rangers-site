@@ -605,6 +605,112 @@ a {
   background: white;
 }
 
+.store-grid {
+  display: grid;
+  gap: 20px;
+}
+
+.store-card {
+  display: grid;
+  grid-template-columns: minmax(260px, 430px) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.store-media {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 360px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+  overflow: hidden;
+}
+
+.store-media img {
+  width: 100%;
+  max-height: 430px;
+  object-fit: contain;
+  padding: 14px;
+}
+
+.store-badge {
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: var(--red-600);
+  color: white;
+  font-weight: 900;
+  font-size: 0.85rem;
+}
+
+.store-kicker {
+  margin: 0 0 8px;
+  color: var(--red-700);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.store-price {
+  margin: 0 0 12px;
+  color: var(--blue-900);
+  font-size: 2rem;
+  font-weight: 950;
+}
+
+.store-deadline {
+  padding: 10px 12px;
+  border-left: 5px solid var(--gold-500);
+  background: #fff8df;
+  border-radius: 6px;
+}
+
+.store-form {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.store-form h3 {
+  margin: 0 0 4px;
+  color: var(--blue-900);
+}
+
+.store-form label {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+  color: var(--blue-900);
+  font-weight: 900;
+}
+
+.store-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.store-form input,
+.store-form select,
+.store-form textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  min-height: 46px;
+  padding: 10px 12px;
+  background: white;
+  color: var(--ink);
+}
+
+.store-form textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
 .rsvp-row {
   display: flex;
   gap: 8px;
@@ -840,7 +946,9 @@ a {
   .home-panels,
   .rant-layout,
   .tournament-grid,
-  .profile-layout {
+  .profile-layout,
+  .store-card,
+  .store-form-grid {
     grid-template-columns: 1fr;
   }
 

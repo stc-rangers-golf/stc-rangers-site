@@ -134,6 +134,7 @@ function bootstrapDataFiles() {
     "password-reset.local.json",
     "rant.json",
     "standings.json",
+    "store-orders.local.json",
     "tournament-rsvps.local.json",
     "tournaments.json",
     "users.local.json",
@@ -268,6 +269,10 @@ function passwordResetFile() {
 
 function accountRequestsFile() {
   return dataPath("private", "account-requests.local.json");
+}
+
+function storeOrdersFile() {
+  return seedDataFile("private", "store-orders.local.json");
 }
 
 async function deliverEmail(message) {
@@ -910,6 +915,59 @@ async function handleApi(req, res, url) {
     });
   }
 
+  if (url.pathname === "/api/store-orders" && req.method === "POST") {
+    const body = await readBody(req);
+    let payload = {};
+    try {
+      payload = JSON.parse(body || "{}");
+    } catch {
+      return sendJson(res, 400, { ok: false, message: "Invalid store request." });
+    }
+    const store = readJsonFile(seedDataFile("public", "store.json"), { products: [] });
+    const product = (store.products || []).find((item) => item.id === String(payload.productId || ""));
+    if (!product) return sendJson(res, 404, { ok: false, message: "Store item not found." });
+    const name = String(payload.name || "").trim();
+    const email = normalizeEmail(payload.email);
+    const phone = String(payload.phone || "").trim();
+    const size = String(payload.size || "").trim();
+    const quantity = Math.max(1, Math.min(20, Number(payload.quantity || 1)));
+    const notes = String(payload.notes || "").trim();
+    if (!name || !email.includes("@")) {
+      return sendJson(res, 400, { ok: false, message: "Enter your name and email." });
+    }
+    const request = {
+      id: crypto.randomUUID(),
+      productId: product.id,
+      productTitle: product.title,
+      priceText: product.priceText || "",
+      name,
+      email,
+      phone,
+      size,
+      quantity,
+      notes,
+      userEmail: currentUser(req)?.email || "",
+      createdAt: new Date().toISOString(),
+      status: "new",
+    };
+    const orders = readJsonFile(storeOrdersFile(), []);
+    orders.unshift(request);
+    writeJsonFile(storeOrdersFile(), orders.slice(0, 1000));
+    const delivery = await addEmailOutbox({
+      to: process.env.STC_ADMIN_EMAIL || "stcrangersgolf@gmail.com",
+      subject: `STC Rangers store request: ${product.title}`,
+      body: `New store request:\n\nItem: ${product.title}\nPrice: ${product.priceText || "TBD"}\nName: ${name}\nEmail: ${email}\nPhone: ${phone || "Not provided"}\nSize: ${size || "Not selected"}\nQuantity: ${quantity}\nNotes: ${notes || "None"}`,
+      kind: "store-request",
+      productId: product.id,
+    });
+    return sendJson(res, 200, {
+      ok: true,
+      request,
+      emailDelivery: delivery.delivery,
+      message: "Store request saved. The committee will follow up with details.",
+    });
+  }
+
   if (url.pathname === "/api/logout" && req.method === "POST") {
     const sid = parseCookies(req).stc_session;
     if (sid) sessions.delete(sid);
@@ -1059,6 +1117,7 @@ function serveStatic(req, res, url) {
     "/login",
     "/rules",
     "/committee",
+    "/store",
     "/standings",
     "/matches",
     "/tournaments",
@@ -1084,8 +1143,8 @@ function serveStatic(req, res, url) {
 
 function patchIndexHtml(body) {
   return String(body)
-    .replace(/styles\.css\?v=[^"]+/g, "styles.css?v=20260628a")
-    .replace(/app\.js\?v=[^"]+/g, "app.js?v=20260628a");
+    .replace(/styles\.css\?v=[^"]+/g, "styles.css?v=20260628b")
+    .replace(/app\.js\?v=[^"]+/g, "app.js?v=20260628b");
 }
 
 function patchClientApp(body) {
