@@ -343,6 +343,12 @@ a {
   letter-spacing: 0.08em;
 }
 
+.standings-table th:first-child,
+.standings-table td:first-child {
+  width: 124px;
+  min-width: 124px;
+}
+
 .player-button {
   border: 0;
   background: transparent;
@@ -353,10 +359,11 @@ a {
 }
 
 .standing-rank-cell {
-  display: flex;
+  display: grid;
+  grid-template-columns: 28px 44px;
   align-items: center;
-  gap: 14px;
-  min-width: 88px;
+  gap: 12px;
+  min-width: 92px;
 }
 
 .standing-player-cell {
@@ -364,9 +371,9 @@ a {
 }
 
 .standing-avatar {
-  width: 36px;
-  height: 36px;
-  flex: 0 0 36px;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
   border-radius: 50%;
   overflow: hidden;
   display: grid;
