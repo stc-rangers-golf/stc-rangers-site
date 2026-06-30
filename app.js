@@ -57,7 +57,7 @@ function ensureLoginModalMarkup() {
         </div>
         <div id="createAccountPanel" class="hidden" hidden>
           <h2>Create Account</h2>
-          <p>If you are already on the member list, this will start your password setup. Enter the same phone number the league has on file.</p>
+          <p>If you are already on the member list, enter your full name and email to connect your Rangers record and set a password. Add your phone number if you know the one on file.</p>
           <label>Full Name<input id="accountNameInput" type="text" autocomplete="name" placeholder="Full name" /></label>
           <label>Email<input id="accountEmailInput" type="email" autocomplete="email" placeholder="member@email.com" /></label>
           <label>Phone Number<input id="accountPhoneInput" type="tel" autocomplete="tel" placeholder="Phone number" /></label>
@@ -1119,6 +1119,12 @@ function showResetPanel() {
   document.querySelector("#resetPasswordInput").focus();
 }
 
+function showCreateAccountPanel(prefillEmail = "") {
+  document.querySelector("#accountEmailInput").value = normalizeEmailInput(prefillEmail || document.querySelector("#emailInput").value);
+  showLoginSubpanel("createAccountPanel", "");
+  document.querySelector("#accountNameInput").focus();
+}
+
 function showLoginSubpanel(panelId, status = "") {
   ["loginPanel", "resetPanel", "forgotPasswordPanel", "forgotEmailPanel", "createAccountPanel"].forEach((id) => {
     const panel = document.querySelector(`#${id}`);
@@ -1175,6 +1181,9 @@ loginForm.addEventListener("submit", async (event) => {
       document.querySelector("#forgotPasswordEmail").focus();
       return;
     }
+    if (result.offerAccountSetup) {
+      showCreateAccountPanel(document.querySelector("#emailInput").value);
+    }
     loginStatus.textContent = result.message || "Login failed. Please try again.";
     return;
   }
@@ -1212,6 +1221,9 @@ document.querySelector("#sendResetLinkButton").addEventListener("click", async (
     inlineResetToken = result.resetToken;
     showResetPanel();
   }
+  if (!response.ok && result.offerAccountSetup) {
+    showCreateAccountPanel(email);
+  }
   loginStatus.textContent = result.message || (response.ok ? "Reset link sent. Check inbox and spam." : "Could not start password reset.");
 });
 
@@ -1239,9 +1251,7 @@ document.querySelector("#lookupEmailButton").addEventListener("click", async () 
 });
 
 document.querySelector("#createAccountButton").addEventListener("click", () => {
-  document.querySelector("#accountEmailInput").value = normalizeEmailInput(document.querySelector("#emailInput").value);
-  showLoginSubpanel("createAccountPanel", "");
-  document.querySelector("#accountNameInput").focus();
+  showCreateAccountPanel();
 });
 
 document.querySelector("#sendAccountRequestButton").addEventListener("click", async () => {

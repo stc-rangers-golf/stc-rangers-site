@@ -461,9 +461,20 @@ function findKnownMemberByNamePhone(name, phone) {
   return loadUsers().find((user) => memberNameMatches(user, name) && memberPhoneMatches(user, phone));
 }
 
+function findKnownMemberByUniquePhone(phone) {
+  const submitted = normalizePhone(phone);
+  if (submitted.length < 7) return null;
+  const matches = loadUsers().filter((user) => memberPhoneMatches(user, phone));
+  if (matches.length !== 1) return null;
+  return matches[0];
+}
+
 function findKnownMemberForSignup(name, phone) {
   const phoneMatch = findKnownMemberByNamePhone(name, phone);
   if (phoneMatch) return { user: phoneMatch, verifiedBy: "name-phone" };
+
+  const uniquePhoneMatch = findKnownMemberByUniquePhone(phone);
+  if (uniquePhoneMatch) return { user: uniquePhoneMatch, verifiedBy: "unique-phone" };
 
   const submittedName = normalizeMemberName(name);
   if (!submittedName) return null;
@@ -725,7 +736,8 @@ async function handleApi(req, res, url) {
       }
       return sendJson(res, 401, {
         ok: false,
-        message: "No member account was found with that email. Tap Forgot email or ask the committee to confirm your account email.",
+        offerAccountSetup: true,
+        message: "No member account was found with that email. If this is your first login on the new site, tap Create account and enter your full name so we can connect you to the member list.",
       });
     }
 
@@ -759,7 +771,8 @@ async function handleApi(req, res, url) {
     if (!user) {
       return sendJson(res, 404, {
         ok: false,
-        message: "No member account was found with that email. Try Forgot email or ask the committee to confirm your email.",
+        offerAccountSetup: true,
+        message: "No member account was found with that email. If this is your first login on the new site, use Create account with your full name and this email to set your password.",
       });
     }
     const entry = await createPasswordReset(req, user);
@@ -843,22 +856,25 @@ async function handleApi(req, res, url) {
     let existingUser = findUser(email);
     let matchedExistingByNamePhone = false;
     let matchedExistingByUniqueName = false;
+    let matchedExistingByUniquePhone = false;
     if (!existingUser) {
       const knownMember = findKnownMemberForSignup(name, phone);
       if (knownMember) {
         existingUser = updateMemberLoginEmail(knownMember.user, email);
         matchedExistingByNamePhone = knownMember.verifiedBy === "name-phone";
         matchedExistingByUniqueName = knownMember.verifiedBy === "unique-name";
+        matchedExistingByUniquePhone = knownMember.verifiedBy === "unique-phone";
       }
     }
     if (existingUser) {
       const entry = await createPasswordReset(req, existingUser);
-      const canUseInlineReset = entry.delivery !== "sent" && (memberPhoneMatches(existingUser, phone) || matchedExistingByUniqueName);
+      const canUseInlineReset = entry.delivery !== "sent" && (memberPhoneMatches(existingUser, phone) || matchedExistingByUniqueName || matchedExistingByUniquePhone);
       return sendJson(res, 200, {
         ok: true,
         existingMember: true,
         matchedExistingByNamePhone,
         matchedExistingByUniqueName,
+        matchedExistingByUniquePhone,
         delivery: entry.delivery,
         inlineReset: canUseInlineReset,
         resetToken: canUseInlineReset ? entry.resetToken : "",
