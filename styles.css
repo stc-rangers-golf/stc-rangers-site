@@ -798,6 +798,30 @@ a {
   background: white;
 }
 
+.tournament-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.tournament-facts span {
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--soft);
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.tournament-facts strong {
+  color: var(--muted);
+  font-size: 0.76rem;
+  text-transform: uppercase;
+}
+
 .store-grid {
   display: grid;
   gap: 20px;

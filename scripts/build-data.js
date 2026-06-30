@@ -142,10 +142,29 @@ const rantPosts = readJson(path.join(imports, "RantPosts-import-2026.json"))
     updatedAt: post.updatedAt || "",
   }));
 
+const tournamentDetails = {
+  Rockway: {
+    teeTime: "7:15 a.m.",
+    format: "Individual score with handicap",
+    price: "$80",
+  },
+  "Willow Dell": {
+    teeTime: "11:30 a.m.",
+    format: "2-man best ball",
+    price: "$75",
+  },
+  "Whisky Run": {
+    teeTime: "7:30 a.m.",
+    format: "4-man best ball",
+    price: "$75",
+  },
+};
+
 const tournaments = readJson(path.join(imports, "TournamentEvents-import-2026.json")).map((event, index) => ({
   id: `tournament-${index + 1}`,
   title: event.title || "",
   eventDate: event.eventDate || "",
+  ...(tournamentDetails[event.title] || {}),
   location: event.location || "",
   description: event.description || "",
   registrationUrl: event.registrationUrl || "",

@@ -864,6 +864,13 @@ function renderTournaments() {
             <article class="tournament-card">
               <h3>${escapeHtml(event.title)}</h3>
               <div class="event-meta">${escapeHtml(event.eventDate)} · ${escapeHtml(event.status)}</div>
+              ${(event.teeTime || event.format || event.price) ? `
+                <div class="tournament-facts">
+                  ${event.teeTime ? `<span><strong>Time</strong>${escapeHtml(event.teeTime)}</span>` : ""}
+                  ${event.format ? `<span><strong>Format</strong>${escapeHtml(event.format)}</span>` : ""}
+                  ${event.price ? `<span><strong>Price</strong>${escapeHtml(event.price)}</span>` : ""}
+                </div>
+              ` : ""}
               <p><strong>${escapeHtml(event.location)}</strong><br />${escapeHtml(event.description)}</p>
               <p class="rsvp-status">${rsvpByTournament[event.id] ? `Your RSVP: ${escapeHtml(rsvpByTournament[event.id].status)}` : "No RSVP yet"}</p>
               <div class="rsvp-row">
