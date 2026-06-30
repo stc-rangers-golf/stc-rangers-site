@@ -788,12 +788,9 @@ function isBracketVacancy(match) {
 }
 
 function findBracketLeader(matches) {
-  const complete = matches.filter((match) => match.winner && !isBracketVacancy(match));
-  const latestRound = complete
-    .map((match) => Number(String(match.round || "").match(/\d+/)?.[0] || 0))
-    .reduce((max, value) => Math.max(max, value), 0);
-  const leaders = complete.filter((match) => Number(String(match.round || "").match(/\d+/)?.[0] || 0) === latestRound);
-  return leaders.length === 1 ? leaders[0].winner : "";
+  const championshipMatches = matches.filter((match) => /final|championship/i.test(String(match.round || "")));
+  const completedChampionship = championshipMatches.filter((match) => match.winner && !isBracketVacancy(match));
+  return completedChampionship.length === 1 ? completedChampionship[0].winner : "";
 }
 
 function groupByRound(matches) {
