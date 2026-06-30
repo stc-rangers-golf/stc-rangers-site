@@ -239,6 +239,31 @@ function privateFile(name) {
   return seedDataFile("private", `${name}.json`);
 }
 
+const tournamentDetails = {
+  Rockway: {
+    teeTime: "7:15 a.m.",
+    format: "Individual score with handicap",
+    price: "$80",
+  },
+  "Willow Dell": {
+    teeTime: "11:30 a.m.",
+    format: "2-man best ball",
+    price: "$75",
+  },
+  "Whisky Run": {
+    teeTime: "7:30 a.m.",
+    format: "4-man best ball",
+    price: "$75",
+  },
+};
+
+function enrichTournaments(tournaments) {
+  return tournaments.map((event) => ({
+    ...event,
+    ...(tournamentDetails[event.title] || {}),
+  }));
+}
+
 function rsvpsFile() {
   return seedDataFile("private", "tournament-rsvps.local.json");
 }
@@ -299,7 +324,7 @@ function rangersRickSnapshot() {
     standings,
     matches,
     weekly: readJsonFile(privateFile("weekly"), []),
-    tournaments: readJsonFile(privateFile("tournaments"), []),
+    tournaments: enrichTournaments(readJsonFile(privateFile("tournaments"), [])),
     tournamentRsvps: readJsonFile(rsvpsFile(), []),
     rant: readJsonFile(privateFile("rant"), []),
     contacts: readJsonFile(privateFile("contacts"), []),
@@ -978,7 +1003,7 @@ async function handleApi(req, res, url) {
     if (!tournamentId || !["Going", "Maybe", "Not Going"].includes(status)) {
       return sendJson(res, 400, { ok: false, message: "Choose Going, Maybe, or Not Going." });
     }
-    const tournaments = readJsonFile(seedDataFile("private", "tournaments.json"), []);
+    const tournaments = enrichTournaments(readJsonFile(seedDataFile("private", "tournaments.json"), []));
     const tournament = tournaments.find((item) => item.id === tournamentId);
     if (!tournament) return sendJson(res, 404, { ok: false, message: "Tournament not found." });
     const all = readJsonFile(rsvpsFile(), []);
@@ -998,7 +1023,7 @@ async function handleApi(req, res, url) {
     const confirmation = await addEmailOutbox({
       to: user.email,
       subject: `STC Rangers Tournament RSVP: ${tournament.title}`,
-      body: `Hi ${user.name},\n\nYour RSVP for ${tournament.title} on ${tournament.eventDate} is confirmed as: ${status}.\n\nLocation: ${tournament.location}\n${tournament.description}\n\nYou can return to the Tournaments page to update your RSVP if needed.\n\nSTC Rangers Golf League`,
+      body: `Hi ${user.name},\n\nYour RSVP for ${tournament.title} on ${tournament.eventDate} is confirmed as: ${status}.\n\nTime: ${tournament.teeTime || "TBD"}\nFormat: ${tournament.format || "TBD"}\nPrice: ${tournament.price || "TBD"}\nLocation: ${tournament.location}\n${tournament.description}\n\nYou can return to the Tournaments page to update your RSVP if needed.\n\nSTC Rangers Golf League`,
       kind: "tournament-rsvp",
       tournamentId,
     });
@@ -1080,6 +1105,7 @@ async function handleApi(req, res, url) {
     let body = fs.readFileSync(file, "utf8");
     if (privateMatch[1] === "matches") body = patchMatches(body);
     if (privateMatch[1] === "standings") body = patchStandings(body);
+    if (privateMatch[1] === "tournaments") body = JSON.stringify(enrichTournaments(JSON.parse(body)), null, 2);
     return send(res, 200, body, {
       "Content-Type": "application/json; charset=utf-8",
       "Cache-Control": "no-store",
