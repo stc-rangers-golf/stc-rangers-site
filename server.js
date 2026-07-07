@@ -123,6 +123,49 @@ function writeJsonFile(file, value) {
   fs.writeFileSync(file, JSON.stringify(value, null, 2) + "\n");
 }
 
+function updateJamesMcgowanDisplayEmail() {
+  const displayEmail = "james.mcgowan@hotmail.com";
+  updateMemberEmailByName(privateFile("contacts"), "James Mcgowan", displayEmail);
+  updateNestedContactEmail(privateFile("matches"), "James Mcgowan", displayEmail);
+  updateNestedContactEmail(privateFile("standings"), "James Mcgowan", displayEmail);
+}
+
+function updateMemberEmailByName(file, name, email) {
+  const rows = readJsonFile(file, []);
+  if (!Array.isArray(rows)) return;
+  let changed = false;
+  rows.forEach((row) => {
+    if (normalizeMemberName(row && row.name) === normalizeMemberName(name) && row.email !== email) {
+      row.email = email;
+      changed = true;
+    }
+  });
+  if (changed) writeJsonFile(file, rows);
+}
+
+function updateNestedContactEmail(file, name, email) {
+  const rows = readJsonFile(file, []);
+  if (!Array.isArray(rows)) return;
+  let changed = false;
+  const target = normalizeMemberName(name);
+  rows.forEach((row) => {
+    const contactSources = [row && row.contact, row && row.contacts, row && row.playerContact, row && row.memberContact].filter(Boolean);
+    contactSources.forEach((source) => {
+      if (source.email && normalizeMemberName(source.name || row.name || row.displayName) === target && source.email !== email) {
+        source.email = email;
+        changed = true;
+      }
+      Object.values(source).forEach((contact) => {
+        if (contact && typeof contact === "object" && contact.email && normalizeMemberName(contact.name) === target && contact.email !== email) {
+          contact.email = email;
+          changed = true;
+        }
+      });
+    });
+  });
+  if (changed) writeJsonFile(file, rows);
+}
+
 function bootstrapDataFiles() {
   return new Set([
     "account-requests.local.json",
@@ -1320,6 +1363,8 @@ const server = http.createServer(async (req, res) => {
     return sendJson(res, 500, { ok: false, message: error.message });
   }
 });
+
+updateJamesMcgowanDisplayEmail();
 
 server.listen(port, () => {
   console.log(`STC Rangers standalone running at http://127.0.0.1:${port}`);
