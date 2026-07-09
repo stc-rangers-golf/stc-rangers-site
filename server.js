@@ -697,6 +697,7 @@ async function handleApi(req, res, url) {
     }
     const allowed = bootstrapDataFiles();
     const incoming = payload.files && typeof payload.files === "object" ? payload.files : {};
+    const publicIncoming = payload.publicFiles && typeof payload.publicFiles === "object" ? payload.publicFiles : {};
     const written = [];
     for (const [filename, contents] of Object.entries(incoming)) {
       if (!allowed.has(filename)) continue;
@@ -710,6 +711,19 @@ async function handleApi(req, res, url) {
       }
       writeJsonFile(dataPath("private", filename), value);
       written.push(filename);
+    }
+    for (const [filename, contents] of Object.entries(publicIncoming)) {
+      if (filename !== "home.json") continue;
+      let value = contents;
+      if (typeof contents === "string") {
+        try {
+          value = JSON.parse(contents);
+        } catch {
+          return sendJson(res, 400, { ok: false, message: `Invalid JSON for public/${filename}.` });
+        }
+      }
+      writeJsonFile(dataPath("public", filename), value);
+      written.push(`public/${filename}`);
     }
     return sendJson(res, 200, { ok: true, written });
   }

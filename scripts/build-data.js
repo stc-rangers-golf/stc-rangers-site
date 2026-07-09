@@ -78,17 +78,22 @@ const weekly = readJson(path.join(imports, "WeeklyResults-import-2026-06-03.json
   updatedAt: row.updatedAt || "",
 }));
 
-const june17 = weekly.find((row) => row.weekDate === "2026-06-17");
+const latestCompleteWeekly =
+  weekly
+    .filter((row) => row.status === "Complete")
+    .sort((a, b) => String(b.weekDate).localeCompare(String(a.weekDate)))[0] ||
+  weekly.find((row) => row.weekDate === "2026-07-08") ||
+  weekly[0];
 const publicHome = {
-  currentUpdate: "June 17 results are loaded for member preview. June 24 and July 1 are league nights off.",
+  currentUpdate: `${latestCompleteWeekly.displayLabel} results are loaded for member preview.`,
   weeklyPrizeWinners: {
-    label: "June 17",
-    twos: june17?.twos || [],
-    closestToPin: june17?.closestToPin || [],
+    label: latestCompleteWeekly.displayLabel,
+    twos: latestCompleteWeekly?.twos || [],
+    closestToPin: latestCompleteWeekly?.closestToPin || [],
   },
   weeklyNews: {
-    headline: "League Schedule Update",
-    body: "No golf June 24 or July 1; we will see you back on July 8. Thank you. Next sweeps week July 8th.",
+    headline: `${latestCompleteWeekly.displayLabel} Weekly Winners`,
+    body: "Flight winners, weekly scores, match results, and updated standings are available after member login.",
   },
   memorial: {
     title: "Peter McBride Memorial",
@@ -98,7 +103,7 @@ const publicHome = {
   },
 };
 
-const matchSource = readJson(path.join(wixAudit, "matchresults-cms-upsert-20260619.json")).items || [];
+const matchSource = readJson(path.join(imports, "MatchResults-import-2026.json"));
 const matches = matchSource.map((row) => {
   const p1Contact = contactByName.get(normalizeName(row.playerOne)) || {
     email: row.playerOneEmail || "",

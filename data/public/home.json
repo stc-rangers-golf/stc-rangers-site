@@ -1,34 +1,34 @@
 {
-  "currentUpdate": "June 17 results are loaded for member preview. June 24 and July 1 are league nights off.",
+  "currentUpdate": "July 8 results are loaded for member preview.",
   "weeklyPrizeWinners": {
-    "label": "June 17",
+    "label": "July 8",
     "twos": [
-      "Darren Miller",
-      "Daryl McDonell",
-      "Dennis Larocque",
-      "Steve Burling"
+      "Kyler Beckman",
+      "Jerry Covelli",
+      "Mark Barrick",
+      "Stephen Watton"
     ],
     "closestToPin": [
       {
         "hole": 4,
-        "name": "Casey Jarzabek",
-        "source": "Casey confirmed June 17"
+        "name": "Mark Barrick",
+        "source": "Casey confirmed July 9"
       },
       {
         "hole": 7,
-        "name": "Darren Miller",
-        "source": "Casey confirmed June 17"
+        "name": "Mark Barrick",
+        "source": "Casey confirmed July 9"
       }
     ]
   },
   "weeklyNews": {
-    "headline": "League Schedule Update",
-    "body": "No golf June 24 or July 1; we will see you back on July 8. Thank you. Next sweeps week July 8th."
+    "headline": "July 8 Weekly Winners",
+    "body": "Flight winners, weekly scores, match results, and updated standings are available after member login."
   },
   "memorial": {
     "title": "Peter McBride Memorial",
     "kicker": "Our leader, our friend.",
     "body": "Gone but not forgotten.",
-    "closing": "RIP Big Chum."
+    "closing": "RIP big chum."
   }
 }
