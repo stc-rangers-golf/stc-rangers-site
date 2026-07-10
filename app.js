@@ -558,8 +558,8 @@ function findCurrentMemberMatches() {
   return matches
     .filter((match) => {
       if (!isCurrentMemberInMatch(match)) return false;
-      if (isAwaitingOpponentMatch(match)) return true;
       if (String(match.status || "").toLowerCase() === "complete") return false;
+      if (isAwaitingOpponentMatch(match)) return true;
       if (isBracketVacancy(match)) return false;
       return true;
     })
