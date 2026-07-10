@@ -531,7 +531,16 @@ function getInitials(name) {
 }
 
 function normalizePersonName(name) {
-  return String(name || "").trim().replace(/\s+/g, " ").toLowerCase();
+  const normalized = String(name || "").trim().replace(/\s+/g, " ").toLowerCase();
+  const aliases = {
+    "casey jarzebek": "casey jarzabek",
+    "fred kryzanowksi": "fred kryzanowski",
+    "jim babin": "james babin",
+    "jim findly": "jim findlay",
+    "mark renolds": "mark reynolds",
+    "renolds m": "mark reynolds",
+  };
+  return aliases[normalized] || normalized;
 }
 
 function findMemberPhoto(name) {
@@ -563,8 +572,7 @@ function findCurrentMemberMatches() {
       if (isBracketVacancy(match)) return false;
       return true;
     })
-    .sort((a, b) => getRoundNumber(a) - getRoundNumber(b))
-    .slice(0, 2);
+    .sort((a, b) => getRoundNumber(a) - getRoundNumber(b));
 }
 
 function isCurrentMemberInMatch(match) {
