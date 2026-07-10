@@ -1191,6 +1191,11 @@ function patchMatches(body) {
   const findMatch = (division, round, matchNumber) => matches.find((match) =>
     match.division === division && match.round === round && match.matchNumber === matchNumber
   );
+  const normalizeMatchName = (name) => String(name || "").trim().toLowerCase().replace(/\s+/g, " ");
+  const samePlayers = (match, first, second) => {
+    const players = [match.playerOne, match.playerTwo].map((name) => normalizeMatchName(name));
+    return players.includes(normalizeMatchName(first)) && players.includes(normalizeMatchName(second));
+  };
   const findContact = (name) => {
     for (const match of matches) {
       if (match.contacts && match.contacts[name]) return match.contacts[name];
@@ -1199,24 +1204,42 @@ function patchMatches(body) {
   };
   const aR25 = findMatch("A", "Round 2", "R2-5");
   const aToddExtraBye = findMatch("A", "Round 2", "R2-9");
+  const aToddCompleted = matches.find((match) =>
+    match.competition === "Division" &&
+    match.division === "A" &&
+    match.round === "Round 2" &&
+    samePlayers(match, "Andy Packham", "Todd Wark") &&
+    normalizeMatchName(match.winner) === normalizeMatchName("Andy Packham")
+  );
   if (aR25 && /bye/i.test(String(aR25.playerTwo || aR25.result || ""))) {
     Object.assign(aR25, {
       playerOne: "Andy Packham",
       playerTwo: "Todd Wark",
       playerOneHandicap: 5.5,
       playerTwoHandicap: 7.5,
-      status: "Pending",
-      result: "Round 2 pairing - Todd Wark assigned opponent to avoid repeat bye",
-      winner: "",
-      updatedAt: "2026-06-26",
+      status: aToddCompleted ? "Complete" : "Pending",
+      result: aToddCompleted ? aToddCompleted.result : "Round 2 pairing - Todd Wark assigned opponent to avoid repeat bye",
+      winner: aToddCompleted ? "Andy Packham" : "",
+      updatedAt: aToddCompleted ? aToddCompleted.updatedAt : "2026-06-26",
       contacts: {
         "Andy Packham": findContact("Andy Packham"),
         "Todd Wark": findContact("Todd Wark"),
       },
     });
   }
-  if (aToddExtraBye) {
-    matches = matches.filter((match) => match !== aToddExtraBye);
+  if (aToddExtraBye || aToddCompleted) {
+    matches = matches.filter((match) =>
+      match === aR25 ||
+      !(
+        match.competition === "Division" &&
+        match.division === "A" &&
+        match.round === "Round 2" &&
+        (
+          (match.matchNumber === "R2-9" && samePlayers(match, "Todd Wark", "TBD / Bye")) ||
+          (match.matchNumber !== "R2-5" && samePlayers(match, "Andy Packham", "Todd Wark"))
+        )
+      )
+    );
   }
   if (!findMatch("A", "Round 3", "R3-BYE")) {
     matches.push({
