@@ -315,6 +315,15 @@ a {
   column-gap: 22px;
 }
 
+.prize-list-stacked {
+  columns: 1;
+}
+
+.prize-list-stacked span {
+  display: block;
+  margin-top: 4px;
+}
+
 .winner-badge-row {
   display: flex;
   align-items: center;

@@ -257,6 +257,16 @@ function renderHome() {
   const twos = home.weeklyPrizeWinners.twos.length
     ? home.weeklyPrizeWinners.twos.map((name) => `<li>Two: ${escapeHtml(name)}</li>`).join("")
     : "<li>No twos posted.</li>";
+  const sweeps = Array.isArray(home.weeklyPrizeWinners.sweeps) && home.weeklyPrizeWinners.sweeps.length
+    ? home.weeklyPrizeWinners.sweeps.map((flight) => `
+      <li>
+        <strong>${escapeHtml(flight.flight)} Division</strong>
+        ${flight.places.map((place) => `
+          <span>${escapeHtml(place.place)}: ${escapeHtml(place.names.join(", "))}</span>
+        `).join("")}
+      </li>
+    `).join("")
+    : "";
   const pinHighlights = home.weeklyPrizeWinners.closestToPin
     .map((winner) => {
       const label = `Hole ${winner.hole}`;
@@ -295,6 +305,13 @@ function renderHome() {
           <article class="glass-panel">
             <h2 class="panel-title">Weekly Prize Winners</h2>
             <p><strong>${escapeHtml(home.weeklyPrizeWinners.label)}</strong></p>
+            ${sweeps ? `
+              <div class="winner-badge-row">
+                <span class="winner-badge">Sweeps</span>
+                <span class="winner-note">Division results</span>
+              </div>
+              <ul class="prize-list prize-list-compact prize-list-stacked">${sweeps}</ul>
+            ` : ""}
             <div class="winner-badge-row">
               <span class="winner-badge">2s</span>
               <span class="winner-note">Members who carded a two</span>

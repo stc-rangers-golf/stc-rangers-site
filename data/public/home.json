@@ -5,8 +5,7 @@
     "twos": [
       "Kyler Beckman",
       "Jerry Covelli",
-      "Mark Barrick",
-      "Stephen Watton"
+      "Mark Barrick"
     ],
     "closestToPin": [
       {
@@ -19,11 +18,65 @@
         "name": "Darryl Mcdonell",
         "source": "Casey corrected July 10"
       }
+    ],
+    "sweeps": [
+      {
+        "flight": "A",
+        "places": [
+          {
+            "place": "1st",
+            "names": [
+              "Derek Rodger"
+            ]
+          },
+          {
+            "place": "T-2nd",
+            "names": [
+              "John Pankoff",
+              "Kyler Beckman"
+            ]
+          }
+        ]
+      },
+      {
+        "flight": "B",
+        "places": [
+          {
+            "place": "1st",
+            "names": [
+              "Bryan Schuhmann"
+            ]
+          },
+          {
+            "place": "2nd",
+            "names": [
+              "Mark Barrick"
+            ]
+          }
+        ]
+      },
+      {
+        "flight": "C",
+        "places": [
+          {
+            "place": "1st",
+            "names": [
+              "Campbell Andrews"
+            ]
+          },
+          {
+            "place": "2nd",
+            "names": [
+              "Ron Weeks"
+            ]
+          }
+        ]
+      }
     ]
   },
   "weeklyNews": {
     "headline": "July 8 Weekly Winners",
-    "body": "Flight winners, weekly scores, match results, and updated standings are available after member login."
+    "body": "Sweeps, twos, closest-to-pin winners, match results, and updated standings are available after member login."
   },
   "memorial": {
     "title": "Peter McBride Memorial",
