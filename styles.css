@@ -245,6 +245,19 @@ a {
   font-size: 1.05rem;
 }
 
+.glance-list {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: var(--blue-900);
+  font-size: 0.88rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.glance-list li + li {
+  margin-top: 3px;
+}
+
 .member-snapshot {
   margin: 18px auto 0;
   display: grid;

@@ -250,7 +250,12 @@ function renderHome() {
   const { home } = state.data;
   const thisWeekItems = [
     ["Next League Night", "July 8"],
-    ["Feature", "Sweeps Week"],
+    ["Course Update", [
+      "The golf course is open today.",
+      "Bunkers are in play.",
+      "Standard rules apply.",
+      "Make sure your matches are complete.",
+    ]],
     ["Round 2 Matches", "Due July 15"],
     ["Next Tournament", "Rockway · July 25"],
   ];
@@ -296,7 +301,9 @@ function renderHome() {
           ${thisWeekItems.map(([label, value]) => `
             <div class="glance-item">
               <span>${escapeHtml(label)}</span>
-              <strong>${escapeHtml(value)}</strong>
+              ${Array.isArray(value)
+                ? `<ul class="glance-list">${value.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`
+                : `<strong>${escapeHtml(value)}</strong>`}
             </div>
           `).join("")}
         </div>
