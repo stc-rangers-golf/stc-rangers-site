@@ -130,6 +130,14 @@ function updateJamesMcgowanDisplayEmail() {
   updateNestedContactEmail(privateFile("standings"), "James Mcgowan", displayEmail);
 }
 
+function updateMarkHoenigDisplayEmail() {
+  const displayEmail = "unitytrim@gmail.com";
+  updateMemberEmailByName(privateFile("contacts"), "Mark Hoenig", displayEmail);
+  updateMemberEmailByName(usersFile(), "Mark Hoenig", displayEmail);
+  updateNestedContactEmail(privateFile("matches"), "Mark Hoenig", displayEmail);
+  updateNestedContactEmail(privateFile("standings"), "Mark Hoenig", displayEmail);
+}
+
 function updateMemberEmailByName(file, name, email) {
   const rows = readJsonFile(file, []);
   if (!Array.isArray(rows)) return;
@@ -1402,6 +1410,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 updateJamesMcgowanDisplayEmail();
+updateMarkHoenigDisplayEmail();
 
 server.listen(port, () => {
   console.log(`STC Rangers standalone running at http://127.0.0.1:${port}`);
