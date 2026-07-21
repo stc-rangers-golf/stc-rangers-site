@@ -224,34 +224,150 @@ function ensureMikeChmielewskiRound2Bye() {
   const file = privateFile("matches");
   const rows = readJsonFile(file, []);
   if (!Array.isArray(rows)) return;
-  const match = rows.find((row) => row && row.id === "Division-B-Round 2-R2-7");
-  if (!match) return;
-  const update = {
-    playerOne: "Mike Chmielewski",
-    playerTwo: "BYE",
-    playerOneHandicap: 10,
-    playerTwoHandicap: "",
-    status: "Bye",
-    result: "Bye",
-    winner: "Mike Chmielewski",
-    updatedAt: "2026-07-15",
-    contacts: {
-      "Mike Chmielewski": (match.contacts && match.contacts["Mike Chmielewski"]) || {
-        name: "Mike Chmielewski",
-        email: "chummerthe1@hotmail.com",
-        phone: "905-651-1546",
-      },
-      "BYE": { email: "", phone: "" },
+  if (applyBracketCleanup(rows)) writeJsonFile(file, rows);
+}
+
+function matchCleanupDefinitions() {
+  return [
+    {
+      id: "Division-A-Round 2-R2-5",
+      playerOne: "Andy Packham",
+      playerTwo: "Todd Wark",
+      playerOneHandicap: 5.5,
+      playerTwoHandicap: 7.5,
+      status: "Complete",
+      result: "1 up, 08 Jul",
+      winner: "Andy Packham",
+      updatedAt: "2026-07-08",
     },
-  };
+    {
+      id: "Division-A-Round 2-R2-4",
+      playerOne: "Ken Mason",
+      playerTwo: "BYE",
+      playerOneHandicap: 4,
+      playerTwoHandicap: "",
+      status: "Bye",
+      result: "Bye",
+      winner: "Ken Mason",
+      updatedAt: "2026-07-15",
+    },
+    {
+      id: "Division-B-Round 2-R2-7",
+      playerOne: "Mike Chmielewski",
+      playerTwo: "BYE",
+      playerOneHandicap: 10,
+      playerTwoHandicap: "",
+      status: "Bye",
+      result: "Bye",
+      winner: "Mike Chmielewski",
+      updatedAt: "2026-07-15",
+    },
+    {
+      id: "Division-C-Round 2-R2-3",
+      playerOne: "Derek Galipeau",
+      playerTwo: "BYE",
+      playerOneHandicap: 14,
+      playerTwoHandicap: "",
+      status: "Bye",
+      result: "Bye",
+      winner: "Derek Galipeau",
+      updatedAt: "2026-07-15",
+    },
+    {
+      id: "Club Championship-Round 2-Round 2-R2-7",
+      playerOne: "John Fenwick",
+      playerTwo: "BYE",
+      playerOneHandicap: "",
+      playerTwoHandicap: "",
+      status: "Bye",
+      result: "Bye",
+      winner: "John Fenwick",
+      updatedAt: "2026-07-15",
+    },
+  ];
+}
+
+function findMatchContact(rows, name) {
+  for (const match of rows) {
+    if (match.contacts && match.contacts[name]) return match.contacts[name];
+  }
+  return { name, email: "", phone: "" };
+}
+
+function applyBracketCleanup(rows) {
   let changed = false;
-  Object.entries(update).forEach(([key, value]) => {
-    if (JSON.stringify(match[key]) !== JSON.stringify(value)) {
-      match[key] = value;
+  ["Division-A-Round 2-R2-9", "Division-A-Round 3-R3-BYE"].forEach((id) => {
+    const index = rows.findIndex((row) => row && row.id === id);
+    if (index !== -1) {
+      rows.splice(index, 1);
       changed = true;
     }
   });
-  if (changed) writeJsonFile(file, rows);
+  const applyUpdate = (match, update) => {
+    const next = {
+      ...update,
+      contacts: {
+        [update.playerOne]: findMatchContact(rows, update.playerOne),
+        [update.playerTwo]: { email: "", phone: "" },
+      },
+    };
+    Object.entries(next).forEach(([key, value]) => {
+      if (JSON.stringify(match[key]) !== JSON.stringify(value)) {
+        match[key] = value;
+        changed = true;
+      }
+    });
+  };
+  matchCleanupDefinitions().forEach((update) => {
+    const match = rows.find((row) => row && row.id === update.id);
+    if (match) applyUpdate(match, update);
+  });
+  const caseyMatch = rows.find((row) => row && row.id === "Division-A-Round 2-R2-6");
+  if (caseyMatch && caseyMatch.winner === "Casey Jarzebek") {
+    caseyMatch.winner = "Casey Jarzabek";
+    changed = true;
+  }
+  rows.forEach((match) => {
+    if (!match || match.status !== "Pending") return;
+    const note = String(match.result || "");
+    const confusingNote = note === "No bye" || /had the Round 2 bye; assigned an opponent/i.test(note);
+    if (!confusingNote) return;
+    const players = `${match.playerOne || ""} ${match.playerTwo || ""}`.toLowerCase();
+    if (players.includes("bye") || players.includes("tbd")) return;
+    match.result = "";
+    changed = true;
+  });
+  return changed;
+}
+
+function applyDisplayMatchCleanup(matches, findContact) {
+  ["Division-A-Round 2-R2-9", "Division-A-Round 3-R3-BYE"].forEach((id) => {
+    const index = matches.findIndex((row) => row && row.id === id);
+    if (index !== -1) matches.splice(index, 1);
+  });
+  matchCleanupDefinitions().forEach((update) => {
+    const match = matches.find((row) => row && row.id === update.id);
+    if (!match) return;
+    const next = {
+      ...update,
+      contacts: {
+        [update.playerOne]: findContact(update.playerOne),
+        [update.playerTwo]: { email: "", phone: "" },
+      },
+    };
+    Object.assign(match, next);
+  });
+  const caseyMatch = matches.find((row) => row && row.id === "Division-A-Round 2-R2-6");
+  if (caseyMatch && caseyMatch.winner === "Casey Jarzebek") caseyMatch.winner = "Casey Jarzabek";
+  matches.forEach((match) => {
+    if (!match || match.status !== "Pending") return;
+    const note = String(match.result || "");
+    const confusingNote = note === "No bye" || /had the Round 2 bye; assigned an opponent/i.test(note);
+    if (!confusingNote) return;
+    const players = `${match.playerOne || ""} ${match.playerTwo || ""}`.toLowerCase();
+    if (players.includes("bye") || players.includes("tbd")) return;
+    match.result = "";
+  });
 }
 
 function updateMemberEmailByName(file, name, email) {
@@ -1435,6 +1551,7 @@ function patchMatches(body) {
       },
     });
   }
+  applyDisplayMatchCleanup(matches, findContact);
   return JSON.stringify(matches);
 }
 
