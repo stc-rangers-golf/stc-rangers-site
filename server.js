@@ -236,7 +236,11 @@ function ensureMikeChmielewskiRound2Bye() {
     winner: "Mike Chmielewski",
     updatedAt: "2026-07-15",
     contacts: {
-      "Mike Chmielewski": findContact("Mike Chmielewski"),
+      "Mike Chmielewski": (match.contacts && match.contacts["Mike Chmielewski"]) || {
+        name: "Mike Chmielewski",
+        email: "chummerthe1@hotmail.com",
+        phone: "905-651-1546",
+      },
       "BYE": { email: "", phone: "" },
     },
   };
