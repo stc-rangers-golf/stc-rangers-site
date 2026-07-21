@@ -330,7 +330,10 @@ function applyBracketCleanup(rows) {
   rows.forEach((match) => {
     if (!match || match.status !== "Pending") return;
     const note = String(match.result || "");
-    const confusingNote = note === "No bye" || /had the Round 2 bye; assigned an opponent/i.test(note);
+    const confusingNote =
+      note === "No bye" ||
+      note === "Round 2 winner confirmed" ||
+      /had the Round 2 bye; assigned an opponent/i.test(note);
     if (!confusingNote) return;
     const players = `${match.playerOne || ""} ${match.playerTwo || ""}`.toLowerCase();
     if (players.includes("bye") || players.includes("tbd")) return;
@@ -362,7 +365,10 @@ function applyDisplayMatchCleanup(matches, findContact) {
   matches.forEach((match) => {
     if (!match || match.status !== "Pending") return;
     const note = String(match.result || "");
-    const confusingNote = note === "No bye" || /had the Round 2 bye; assigned an opponent/i.test(note);
+    const confusingNote =
+      note === "No bye" ||
+      note === "Round 2 winner confirmed" ||
+      /had the Round 2 bye; assigned an opponent/i.test(note);
     if (!confusingNote) return;
     const players = `${match.playerOne || ""} ${match.playerTwo || ""}`.toLowerCase();
     if (players.includes("bye") || players.includes("tbd")) return;
