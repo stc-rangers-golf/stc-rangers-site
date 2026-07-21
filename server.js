@@ -179,6 +179,47 @@ function ensureStephenWattonRollingMeadowsRsvp() {
   writeJsonFile(file, rows);
 }
 
+function ensureStephenWattonRockwayRsvp() {
+  const file = rsvpsFile();
+  const rows = readJsonFile(file, []);
+  if (!Array.isArray(rows)) return;
+  const email = "stephen.watton@farmlending.ca";
+  const tournamentId = "tournament-2";
+  const existing = rows.find((row) => {
+    return row && row.tournamentId === tournamentId && (
+      normalizeEmail(row.email) === email || normalizeMemberName(row.name) === normalizeMemberName("Stephen Watton")
+    );
+  });
+  const update = {
+    tournamentId,
+    tournamentTitle: "Rockway",
+    eventDate: "July 25, 2026",
+    status: "Going",
+    email,
+    name: "Stephen Watton",
+  };
+  if (existing) {
+    let changed = false;
+    Object.entries(update).forEach(([key, value]) => {
+      if (existing[key] !== value) {
+        existing[key] = value;
+        changed = true;
+      }
+    });
+    if (changed) {
+      existing.updatedAt = new Date().toISOString();
+      writeJsonFile(file, rows);
+    }
+    return;
+  }
+  rows.unshift({
+    id: crypto.randomUUID(),
+    ...update,
+    updatedAt: new Date().toISOString(),
+  });
+  writeJsonFile(file, rows);
+}
+
 function updateMemberEmailByName(file, name, email) {
   const rows = readJsonFile(file, []);
   if (!Array.isArray(rows)) return;
@@ -1453,6 +1494,7 @@ const server = http.createServer(async (req, res) => {
 updateJamesMcgowanDisplayEmail();
 updateMarkHoenigDisplayEmail();
 ensureStephenWattonRollingMeadowsRsvp();
+ensureStephenWattonRockwayRsvp();
 
 server.listen(port, () => {
   console.log(`STC Rangers standalone running at http://127.0.0.1:${port}`);
