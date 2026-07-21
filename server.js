@@ -220,6 +220,36 @@ function ensureStephenWattonRockwayRsvp() {
   writeJsonFile(file, rows);
 }
 
+function ensureMikeChmielewskiRound2Bye() {
+  const file = privateFile("matches");
+  const rows = readJsonFile(file, []);
+  if (!Array.isArray(rows)) return;
+  const match = rows.find((row) => row && row.id === "Division-B-Round 2-R2-7");
+  if (!match) return;
+  const update = {
+    playerOne: "Mike Chmielewski",
+    playerTwo: "BYE",
+    playerOneHandicap: 10,
+    playerTwoHandicap: "",
+    status: "Bye",
+    result: "Bye",
+    winner: "Mike Chmielewski",
+    updatedAt: "2026-07-15",
+    contacts: {
+      "Mike Chmielewski": findContact("Mike Chmielewski"),
+      "BYE": { email: "", phone: "" },
+    },
+  };
+  let changed = false;
+  Object.entries(update).forEach(([key, value]) => {
+    if (JSON.stringify(match[key]) !== JSON.stringify(value)) {
+      match[key] = value;
+      changed = true;
+    }
+  });
+  if (changed) writeJsonFile(file, rows);
+}
+
 function updateMemberEmailByName(file, name, email) {
   const rows = readJsonFile(file, []);
   if (!Array.isArray(rows)) return;
@@ -1385,6 +1415,22 @@ function patchMatches(body) {
       },
     });
   }
+  if (bR27) {
+    Object.assign(bR27, {
+      playerOne: "Mike Chmielewski",
+      playerTwo: "BYE",
+      playerOneHandicap: 10,
+      playerTwoHandicap: "",
+      status: "Bye",
+      result: "Bye",
+      winner: "Mike Chmielewski",
+      updatedAt: "2026-07-15",
+      contacts: {
+        "Mike Chmielewski": findContact("Mike Chmielewski"),
+        "BYE": { email: "", phone: "" },
+      },
+    });
+  }
   return JSON.stringify(matches);
 }
 
@@ -1495,6 +1541,7 @@ updateJamesMcgowanDisplayEmail();
 updateMarkHoenigDisplayEmail();
 ensureStephenWattonRollingMeadowsRsvp();
 ensureStephenWattonRockwayRsvp();
+ensureMikeChmielewskiRound2Bye();
 
 server.listen(port, () => {
   console.log(`STC Rangers standalone running at http://127.0.0.1:${port}`);
