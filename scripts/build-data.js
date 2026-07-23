@@ -84,8 +84,12 @@ const latestCompleteWeekly =
     .sort((a, b) => String(b.weekDate).localeCompare(String(a.weekDate)))[0] ||
   weekly.find((row) => row.weekDate === "2026-07-08") ||
   weekly[0];
+const currentUpdate =
+  latestCompleteWeekly.weekDate === "2026-07-22"
+    ? `${latestCompleteWeekly.displayLabel} results are loaded for member preview. Carts are 90 degrees or scatter; bunkers are in play unless full of water.`
+    : `${latestCompleteWeekly.displayLabel} results are loaded for member preview.`;
 const publicHome = {
-  currentUpdate: `${latestCompleteWeekly.displayLabel} results are loaded for member preview.`,
+  currentUpdate,
   weeklyPrizeWinners: {
     label: latestCompleteWeekly.displayLabel,
     twos: latestCompleteWeekly?.twos || [],
