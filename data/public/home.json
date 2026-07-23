@@ -1,26 +1,26 @@
 {
-  "currentUpdate": "July 22: carts are 90 degrees or scatter tonight. Bunkers are in play unless full of water.",
+  "currentUpdate": "July 22 results are loaded for member preview.",
   "weeklyPrizeWinners": {
-    "label": "July 15",
+    "label": "July 22",
     "twos": [
-      "Jerry Covelli"
+      "Ralph Falovo"
     ],
     "closestToPin": [
       {
         "hole": 4,
-        "name": "Rob Duncan",
-        "source": "Casey/Rangers Rick confirmed July 15"
+        "name": "Jerry Covelli",
+        "source": "Rangers Rick confirmed July 22"
       },
       {
         "hole": 7,
-        "name": "Mark Hoenig",
-        "source": "Casey/Rangers Rick confirmed July 15"
+        "name": "Casey Jarzabek",
+        "source": "Rangers Rick confirmed July 22"
       }
     ]
   },
   "weeklyNews": {
-    "headline": "July 15 Weekly Winners",
-    "body": "Twos, closest-to-pin winners, match results, and updated standings are available after member login."
+    "headline": "July 22 Weekly Winners",
+    "body": "Flight winners, weekly scores, match results, and updated standings are available after member login."
   },
   "memorial": {
     "title": "Peter McBride Memorial",
