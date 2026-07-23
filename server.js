@@ -431,6 +431,41 @@ function bootstrapDataFiles() {
   ]);
 }
 
+function writeBootstrapPayload(payload, options = {}) {
+  const allowed = options.allowed || bootstrapDataFiles();
+  const allowPublicHome = options.allowPublicHome !== false;
+  const incoming = payload.files && typeof payload.files === "object" ? payload.files : {};
+  const publicIncoming = payload.publicFiles && typeof payload.publicFiles === "object" ? payload.publicFiles : {};
+  const written = [];
+  for (const [filename, contents] of Object.entries(incoming)) {
+    if (!allowed.has(filename)) continue;
+    let value = contents;
+    if (typeof contents === "string") {
+      try {
+        value = JSON.parse(contents);
+      } catch {
+        throw new Error(`Invalid JSON for ${filename}.`);
+      }
+    }
+    writeJsonFile(dataPath("private", filename), value);
+    written.push(filename);
+  }
+  for (const [filename, contents] of Object.entries(publicIncoming)) {
+    if (!allowPublicHome || filename !== "home.json") continue;
+    let value = contents;
+    if (typeof contents === "string") {
+      try {
+        value = JSON.parse(contents);
+      } catch {
+        throw new Error(`Invalid JSON for public/${filename}.`);
+      }
+    }
+    writeJsonFile(dataPath("public", filename), value);
+    written.push(`public/${filename}`);
+  }
+  return written;
+}
+
 function hashPassword(salt, password) {
   return crypto.createHash("sha256").update(String(salt) + String(password)).digest("hex");
 }
@@ -941,37 +976,28 @@ async function handleApi(req, res, url) {
     } catch {
       return sendJson(res, 400, { ok: false, message: "Invalid bootstrap request." });
     }
-    const allowed = bootstrapDataFiles();
-    const incoming = payload.files && typeof payload.files === "object" ? payload.files : {};
-    const publicIncoming = payload.publicFiles && typeof payload.publicFiles === "object" ? payload.publicFiles : {};
-    const written = [];
-    for (const [filename, contents] of Object.entries(incoming)) {
-      if (!allowed.has(filename)) continue;
-      let value = contents;
-      if (typeof contents === "string") {
-        try {
-          value = JSON.parse(contents);
-        } catch {
-          return sendJson(res, 400, { ok: false, message: `Invalid JSON for ${filename}.` });
-        }
-      }
-      writeJsonFile(dataPath("private", filename), value);
-      written.push(filename);
+    try {
+      return sendJson(res, 200, { ok: true, written: writeBootstrapPayload(payload) });
+    } catch (error) {
+      return sendJson(res, 400, { ok: false, message: error.message });
     }
-    for (const [filename, contents] of Object.entries(publicIncoming)) {
-      if (filename !== "home.json") continue;
-      let value = contents;
-      if (typeof contents === "string") {
-        try {
-          value = JSON.parse(contents);
-        } catch {
-          return sendJson(res, 400, { ok: false, message: `Invalid JSON for public/${filename}.` });
-        }
-      }
-      writeJsonFile(dataPath("public", filename), value);
-      written.push(`public/${filename}`);
+  }
+
+  if (url.pathname === "/api/rangers-rick/bootstrap-results" && req.method === "POST") {
+    if (!rangersRickAuthorized(req, url)) return sendJson(res, 404, { ok: false, message: "Not found." });
+    const body = await readBody(req, 25_000_000);
+    let payload = {};
+    try {
+      payload = JSON.parse(body || "{}");
+    } catch {
+      return sendJson(res, 400, { ok: false, message: "Invalid bootstrap request." });
     }
-    return sendJson(res, 200, { ok: true, written });
+    try {
+      const allowed = new Set(["standings.json", "weekly.json", "matches.json"]);
+      return sendJson(res, 200, { ok: true, written: writeBootstrapPayload(payload, { allowed }) });
+    } catch (error) {
+      return sendJson(res, 400, { ok: false, message: error.message });
+    }
   }
 
   if (url.pathname === "/api/codex-bulk-temp-password" && req.method === "POST") {
