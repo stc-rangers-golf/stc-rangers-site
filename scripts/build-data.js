@@ -96,8 +96,8 @@ const publicHome = {
     closestToPin: latestCompleteWeekly?.closestToPin || [],
   },
   weeklyNews: {
-    headline: `${latestCompleteWeekly.displayLabel} Weekly Winners`,
-    body: "Flight winners, weekly scores, match results, and updated standings are available after member login.",
+    headline: `${latestCompleteWeekly.displayLabel} Prize Winners`,
+    body: "Twos, closest-to-pin winners, weekly scores, and updated standings are available after member login.",
   },
   memorial: {
     title: "Peter McBride Memorial",
