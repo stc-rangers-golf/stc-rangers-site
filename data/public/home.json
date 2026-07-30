@@ -1,25 +1,28 @@
 {
-  "currentUpdate": "July 22 results are loaded for member preview. Carts are 90 degrees or scatter; bunkers are in play unless full of water.",
+  "currentUpdate": "July 29 results are loaded for member preview.",
   "weeklyPrizeWinners": {
-    "label": "July 22",
+    "label": "July 29",
     "twos": [
-      "Ralph Falovo"
+      "James McGowan",
+      "Mike Chmielewski",
+      "R. Brodeur",
+      "Ron McIntosh"
     ],
     "closestToPin": [
       {
         "hole": 4,
-        "name": "Jerry Covelli",
-        "source": "Rangers Rick confirmed July 22"
+        "name": "John O'Connor",
+        "source": "Casey confirmed July 29"
       },
       {
         "hole": 7,
-        "name": "Casey Jarzabek",
-        "source": "Rangers Rick confirmed July 22"
+        "name": "Mark Hoenig",
+        "source": "Casey confirmed July 29"
       }
     ]
   },
   "weeklyNews": {
-    "headline": "July 22 Prize Winners",
+    "headline": "July 29 Prize Winners",
     "body": "Twos, closest-to-pin winners, weekly scores, and updated standings are available after member login."
   },
   "memorial": {
