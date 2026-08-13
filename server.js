@@ -435,7 +435,7 @@ function bootstrapDataFiles() {
 
 function writeBootstrapPayload(payload, options = {}) {
   const allowed = options.allowed || bootstrapDataFiles();
-  const allowPublicHome = options.allowPublicHome !== false;
+  const allowedPublic = options.allowedPublic || new Set(["home.json"]);
   const incoming = payload.files && typeof payload.files === "object" ? payload.files : {};
   const publicIncoming = payload.publicFiles && typeof payload.publicFiles === "object" ? payload.publicFiles : {};
   const written = [];
@@ -453,7 +453,7 @@ function writeBootstrapPayload(payload, options = {}) {
     written.push(filename);
   }
   for (const [filename, contents] of Object.entries(publicIncoming)) {
-    if (!allowPublicHome || filename !== "home.json") continue;
+    if (!allowedPublic.has(filename)) continue;
     let value = contents;
     if (typeof contents === "string") {
       try {
@@ -995,8 +995,18 @@ async function handleApi(req, res, url) {
       return sendJson(res, 400, { ok: false, message: "Invalid bootstrap request." });
     }
     try {
-      const allowed = new Set(["standings.json", "weekly.json", "matches.json", "tournament-rsvps.local.json"]);
-      return sendJson(res, 200, { ok: true, written: writeBootstrapPayload(payload, { allowed }) });
+      const allowed = new Set([
+        "contacts.json",
+        "matches.json",
+        "standings.json",
+        "tournament-rsvps.local.json",
+        "users.local.json",
+        "weekly.json",
+      ]);
+      return sendJson(res, 200, {
+        ok: true,
+        written: writeBootstrapPayload(payload, { allowed, allowedPublic: new Set(["committee.json", "home.json"]) }),
+      });
     } catch (error) {
       return sendJson(res, 400, { ok: false, message: error.message });
     }
