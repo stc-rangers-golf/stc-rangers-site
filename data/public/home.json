@@ -1,29 +1,29 @@
 {
-  "currentUpdate": "July 29 results are loaded for member preview.",
+  "currentUpdate": "August 12 results are loaded for member preview.",
   "weeklyPrizeWinners": {
-    "label": "July 29",
+    "label": "August 12",
     "twos": [
+      "Doug Lawrence",
       "James McGowan",
-      "Mike Chmielewski",
-      "R. Brodeur",
-      "Ron McIntosh"
+      "Brian Schuhmann",
+      "Bob Carpenter"
     ],
     "closestToPin": [
       {
         "hole": 4,
-        "name": "John O'Connor",
-        "source": "Casey confirmed July 29"
+        "name": "Mark Barrick",
+        "source": "Rangers Rick August 12 workbook"
       },
       {
         "hole": 7,
-        "name": "Mark Hoenig",
-        "source": "Casey confirmed July 29"
+        "name": "Brian Schuhmann",
+        "source": "Rangers Rick August 12 workbook"
       }
     ]
   },
   "weeklyNews": {
-    "headline": "July 29 Prize Winners",
-    "body": "Twos, closest-to-pin winners, weekly scores, and updated standings are available after member login."
+    "headline": "August 12 Prize Winners",
+    "body": "Twos, closest-to-pin winners, weekly scores, match results, handicap changes, and updated standings are available after member login."
   },
   "memorial": {
     "title": "Peter McBride Memorial",
