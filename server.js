@@ -10,6 +10,8 @@ const port = Number(process.env.PORT || 8790);
 const sessionSecret = process.env.STC_SESSION_SECRET || "stc-rangers-session-v2";
 const sessions = new Map();
 const loginAttempts = new Map();
+const defaultSessionMaxAge = 8 * 60 * 60;
+const stayLoggedInSessionMaxAge = 90 * 24 * 60 * 60;
 
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
@@ -79,7 +81,7 @@ function secureCookie(req) {
   return req.socket.encrypted || forwarded.includes("https") || cfVisitor.includes("https");
 }
 
-function sessionCookie(req, sid, maxAge = 28800) {
+function sessionCookie(req, sid, maxAge = defaultSessionMaxAge) {
   const secure = secureCookie(req) ? "; Secure" : "";
   return `stc_session=${encodeURIComponent(sid)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${maxAge}${secure}`;
 }
@@ -488,7 +490,7 @@ function signSessionPayload(payload) {
   return crypto.createHmac("sha256", sessionSecret).update(payload).digest("base64url");
 }
 
-function createSessionToken(user, maxAge = 28800) {
+function createSessionToken(user, maxAge = defaultSessionMaxAge) {
   const payload = base64Url(JSON.stringify({
     email: normalizeEmail(user.email),
     exp: Date.now() + maxAge * 1000,
@@ -513,10 +515,10 @@ function verifySessionToken(token) {
   }
 }
 
-function createSessionForUser(req, user) {
+function createSessionForUser(req, user, maxAge = defaultSessionMaxAge) {
   const publicProfile = publicUser(user);
-  const sid = createSessionToken(publicProfile);
-  return { sid, user: publicProfile };
+  const sid = createSessionToken(publicProfile, maxAge);
+  return { sid, user: publicProfile, maxAge };
 }
 
 function publicUser(user) {
@@ -993,7 +995,7 @@ async function handleApi(req, res, url) {
       return sendJson(res, 400, { ok: false, message: "Invalid bootstrap request." });
     }
     try {
-      const allowed = new Set(["standings.json", "weekly.json", "matches.json"]);
+      const allowed = new Set(["standings.json", "weekly.json", "matches.json", "tournament-rsvps.local.json"]);
       return sendJson(res, 200, { ok: true, written: writeBootstrapPayload(payload, { allowed }) });
     } catch (error) {
       return sendJson(res, 400, { ok: false, message: error.message });
@@ -1105,10 +1107,12 @@ async function handleApi(req, res, url) {
       });
     }
 
+    const stayLoggedIn = payload.stayLoggedIn === true;
+    const maxAge = stayLoggedIn ? stayLoggedInSessionMaxAge : defaultSessionMaxAge;
     const user = publicUser(userRecord);
-    const { sid } = createSessionForUser(req, user);
+    const { sid } = createSessionForUser(req, user, maxAge);
     return sendJson(res, 200, { ok: true, user }, {
-      "Set-Cookie": sessionCookie(req, sid),
+      "Set-Cookie": sessionCookie(req, sid, maxAge),
     });
   }
 
@@ -1635,7 +1639,7 @@ function serveStatic(req, res, url) {
 function patchIndexHtml(body) {
   return String(body)
     .replace(/styles\.css\?v=[^"]+/g, "styles.css?v=20260628c")
-    .replace(/app\.js\?v=[^"]+/g, "app.js?v=20260628c");
+    .replace(/app\.js\?v=[^"]+/g, "app.js?v=20260730a");
 }
 
 function patchClientApp(body) {

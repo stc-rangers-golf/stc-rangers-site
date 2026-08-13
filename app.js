@@ -24,6 +24,7 @@ function ensureLoginModalMarkup() {
           <p>Log in to view standings, matches, tournaments, the Rant, and member contact details.</p>
           <label>Email<input id="emailInput" type="email" autocomplete="username" placeholder="member@email.com" /></label>
           <label>Password<input id="passwordInput" type="password" autocomplete="current-password" placeholder="Password" /></label>
+          <label class="login-check-row"><input id="stayLoggedInInput" type="checkbox" />Stay logged in</label>
           <button class="button button-red full" type="submit">Log In</button>
         </div>
         <div id="resetPanel" class="hidden" hidden>
@@ -112,16 +113,15 @@ async function refreshPublicHome() {
 }
 
 async function boot() {
-  const [home, rules, committee, session] = await Promise.all([
+  const [home, rules, session] = await Promise.all([
     loadJson("data/public/home.json"),
     loadJson("data/public/rules.json"),
-    loadJson("api/public/committee"),
     loadJson("api/session"),
   ]);
 
   state.authed = Boolean(session.authed);
   state.user = session.user || null;
-  state.data = { home, rules, committee };
+  state.data = { home, rules, committee: [] };
   document.querySelector("#currentUpdate").textContent = `Current Update: ${home.currentUpdate}`;
   syncAuthButtons();
   window.addEventListener("hashchange", renderRoute);
@@ -248,16 +248,17 @@ function escapeHtml(value) {
 
 function renderHome() {
   const { home } = state.data;
+  const atAGlance = home.atAGlance || {};
   const thisWeekItems = [
-    ["Next League Night", "July 8"],
-    ["Course Update", [
+    ["Next League Night", atAGlance.nextLeagueNight || "August 5"],
+    ["Course Update", atAGlance.courseUpdate || [
       "The golf course is open today.",
       "Bunkers are in play.",
       "Standard rules apply.",
       "Make sure your matches are complete.",
     ]],
-    ["Round 2 Matches", "Due July 15"],
-    ["Next Tournament", "Rockway · July 25"],
+    [atAGlance.matchRoundLabel || "Round 3 Matches", atAGlance.matchRoundDue || "Due August 19"],
+    ["Next Tournament", atAGlance.nextTournament || "August 15 · Two-man best ball"],
   ];
   const twos = home.weeklyPrizeWinners.twos.length
     ? home.weeklyPrizeWinners.twos.map((name) => `<li>Two: ${escapeHtml(name)}</li>`).join("")
@@ -1198,6 +1199,7 @@ loginForm.addEventListener("submit", async (event) => {
     body: JSON.stringify({
       email: normalizeEmailInput(document.querySelector("#emailInput").value),
       password: document.querySelector("#passwordInput").value,
+      stayLoggedIn: document.querySelector("#stayLoggedInInput").checked,
     }),
   });
   const result = await response.json().catch(() => ({}));
