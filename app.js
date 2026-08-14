@@ -57,8 +57,8 @@ function ensureLoginModalMarkup() {
           </div>
         </div>
         <div id="createAccountPanel" class="hidden" hidden>
-          <h2>Create Account</h2>
-          <p>If you are already on the member list, enter your full name and email to connect your Rangers record and set a password. Add your phone number if you know the one on file.</p>
+          <h2>Connect Member Login</h2>
+          <p>If you are already a Rangers member, enter your full name and phone number so we can connect this email to your existing member record and let you set a password.</p>
           <label>Full Name<input id="accountNameInput" type="text" autocomplete="name" placeholder="Full name" /></label>
           <label>Email<input id="accountEmailInput" type="email" autocomplete="email" placeholder="member@email.com" /></label>
           <label>Phone Number<input id="accountPhoneInput" type="tel" autocomplete="tel" placeholder="Phone number" /></label>
@@ -71,7 +71,7 @@ function ensureLoginModalMarkup() {
         <div class="login-links">
           <button type="button" id="forgotPasswordButton">Forgot password</button>
           <button type="button" id="forgotEmailButton">Forgot email</button>
-          <button type="button" id="createAccountButton">Create account</button>
+          <button type="button" id="createAccountButton">Connect login</button>
         </div>
       </form>
     </div>
@@ -1297,10 +1297,10 @@ document.querySelector("#sendAccountRequestButton").addEventListener("click", as
   const email = normalizeEmailInput(document.querySelector("#accountEmailInput").value);
   const phone = document.querySelector("#accountPhoneInput").value.trim();
   if (!name || !email) {
-    loginStatus.textContent = "Enter your name and email.";
+    loginStatus.textContent = "Enter your full name and email.";
     return;
   }
-  loginStatus.textContent = "Sending account request...";
+  loginStatus.textContent = "Checking the member list...";
   const response = await fetch("api/account-request", {
     method: "POST",
     credentials: "same-origin",

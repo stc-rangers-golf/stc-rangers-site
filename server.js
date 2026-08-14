@@ -115,6 +115,39 @@ function writeUsers(users) {
   fs.writeFileSync(usersFile(), JSON.stringify(users, null, 2) + "\n");
 }
 
+function createPendingUserFromContact(contact) {
+  const salt = crypto.randomBytes(16).toString("hex");
+  return {
+    id: crypto.randomUUID(),
+    name: String(contact.name || "").trim(),
+    email: normalizeEmail(contact.email),
+    phone: String(contact.phone || "").trim(),
+    role: "member",
+    salt,
+    passwordHash: hashPassword(salt, crypto.randomBytes(24).toString("hex")),
+    passwordResetRequired: true,
+    createdFromContactExport: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+function ensureUsersForContacts() {
+  const users = loadUsers();
+  const contacts = readJsonFile(contactsFile(), []);
+  const existingEmails = new Set(users.map((user) => normalizeEmail(user.email)).filter(Boolean));
+  let changed = false;
+  contacts.forEach((contact) => {
+    const email = normalizeEmail(contact.email);
+    if (!email || existingEmails.has(email)) return;
+    users.push(createPendingUserFromContact(contact));
+    existingEmails.add(email);
+    changed = true;
+  });
+  if (changed) writeUsers(users);
+  return users;
+}
+
 function readJsonFile(file, fallback) {
   if (!fs.existsSync(file)) return fallback;
   return JSON.parse(fs.readFileSync(file, "utf8"));
@@ -479,7 +512,7 @@ function normalizeEmail(email) {
 
 function findUser(email) {
   const normalized = normalizeEmail(email);
-  return loadUsers().find((user) => normalizeEmail(user.email) === normalized);
+  return ensureUsersForContacts().find((user) => normalizeEmail(user.email) === normalized);
 }
 
 function base64Url(value) {
@@ -1103,7 +1136,7 @@ async function handleApi(req, res, url) {
       return sendJson(res, 401, {
         ok: false,
         offerAccountSetup: true,
-        message: "No member account was found with that email. If this is your first login on the new site, tap Create account and enter your full name so we can connect you to the member list.",
+        message: "That email is not connected to a Rangers login yet. Enter your full name and phone number here and the site will connect your existing member record.",
       });
     }
 
@@ -1140,7 +1173,7 @@ async function handleApi(req, res, url) {
       return sendJson(res, 404, {
         ok: false,
         offerAccountSetup: true,
-        message: "No member account was found with that email. If this is your first login on the new site, use Create account with your full name and this email to set your password.",
+        message: "That email is not connected to a Rangers login yet. Enter your full name and phone number here and the site will connect your existing member record.",
       });
     }
     const entry = await createPasswordReset(req, user);
@@ -1220,7 +1253,7 @@ async function handleApi(req, res, url) {
     const name = String(payload.name || "").trim();
     const email = normalizeEmail(payload.email);
     const phone = String(payload.phone || "").trim();
-    if (!name || !email.includes("@")) return sendJson(res, 400, { ok: false, message: "Enter your name and email." });
+    if (!name || !email.includes("@")) return sendJson(res, 400, { ok: false, message: "Enter your full name and email." });
     let existingUser = findUser(email);
     let matchedExistingByNamePhone = false;
     let matchedExistingByUniqueName = false;
