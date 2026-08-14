@@ -115,12 +115,36 @@ function writeUsers(users) {
   fs.writeFileSync(usersFile(), JSON.stringify(users, null, 2) + "\n");
 }
 
+function emailList(value) {
+  const entries = Array.isArray(value) ? value : [value];
+  return [...new Set(entries.map(normalizeEmail).filter((email) => email && email.includes("@")))];
+}
+
+function memberEmailCandidates(record) {
+  if (!record || typeof record !== "object") return [];
+  return emailList([
+    record.email,
+    record.memberEmail,
+    ...(Array.isArray(record.alternateEmails) ? record.alternateEmails : []),
+    ...(Array.isArray(record.aliases) ? record.aliases : []),
+  ]);
+}
+
+function mergeEmailAlias(record, email) {
+  const normalized = normalizeEmail(email);
+  if (!record || !normalized || !normalized.includes("@") || normalizeEmail(record.email) === normalized) return record;
+  const aliases = emailList([...(Array.isArray(record.alternateEmails) ? record.alternateEmails : []), normalized]);
+  if (aliases.length) record.alternateEmails = aliases;
+  return record;
+}
+
 function createPendingUserFromContact(contact) {
   const salt = crypto.randomBytes(16).toString("hex");
   return {
     id: crypto.randomUUID(),
     name: String(contact.name || "").trim(),
     email: normalizeEmail(contact.email),
+    alternateEmails: emailList(contact.alternateEmails),
     phone: String(contact.phone || "").trim(),
     role: "member",
     salt,
@@ -135,13 +159,14 @@ function createPendingUserFromContact(contact) {
 function ensureUsersForContacts() {
   const users = loadUsers();
   const contacts = readJsonFile(contactsFile(), []);
-  const existingEmails = new Set(users.map((user) => normalizeEmail(user.email)).filter(Boolean));
+  const existingEmails = new Set(users.flatMap(memberEmailCandidates));
   let changed = false;
   contacts.forEach((contact) => {
-    const email = normalizeEmail(contact.email);
-    if (!email || existingEmails.has(email)) return;
+    const emails = memberEmailCandidates(contact);
+    const email = emails[0];
+    if (!email || emails.some((candidate) => existingEmails.has(candidate))) return;
     users.push(createPendingUserFromContact(contact));
-    existingEmails.add(email);
+    emails.forEach((candidate) => existingEmails.add(candidate));
     changed = true;
   });
   if (changed) writeUsers(users);
@@ -512,7 +537,7 @@ function normalizeEmail(email) {
 
 function findUser(email) {
   const normalized = normalizeEmail(email);
-  return ensureUsersForContacts().find((user) => normalizeEmail(user.email) === normalized);
+  return ensureUsersForContacts().find((user) => memberEmailCandidates(user).includes(normalized));
 }
 
 function base64Url(value) {
@@ -834,9 +859,10 @@ function memberNameMatches(user, name) {
   const submitted = normalizeMemberName(name);
   if (!submitted) return false;
   const candidates = [user.name];
+  const userEmails = new Set(memberEmailCandidates(user));
   const contacts = readJsonFile(contactsFile(), []);
   contacts
-    .filter((contact) => normalizeEmail(contact.email) === normalizeEmail(user.email))
+    .filter((contact) => memberEmailCandidates(contact).some((email) => userEmails.has(email)))
     .forEach((contact) => candidates.push(contact.name));
   return candidates.some((candidate) => normalizeMemberName(candidate) === submitted);
 }
@@ -888,6 +914,7 @@ function syncContactRecord(previousEmail, user) {
     email: next,
     phone: user.phone || (index === -1 ? "" : contacts[index].phone),
   };
+  mergeEmailAlias(nextContact, previous);
   if (index === -1) contacts.push(nextContact);
   else contacts[index] = nextContact;
   writeJsonFile(contactsFile(), contacts);
@@ -900,6 +927,7 @@ function updateMemberLoginEmail(user, email) {
   const users = loadUsers();
   const index = users.findIndex((item) => normalizeEmail(item.email) === normalizeEmail(user.email));
   if (index === -1) return user;
+  mergeEmailAlias(users[index], previousEmail);
   users[index].email = normalizedEmail;
   writeUsers(users);
   syncContactRecord(previousEmail, users[index]);
@@ -961,9 +989,10 @@ function memberPhoneMatches(user, phone) {
   if (submitted.length < 7) return false;
   const submittedLast = submitted.slice(-7);
   const candidates = [user.phone];
+  const userEmails = new Set(memberEmailCandidates(user));
   const contacts = readJsonFile(contactsFile(), []);
   contacts
-    .filter((contact) => normalizeEmail(contact.email) === normalizeEmail(user.email))
+    .filter((contact) => memberEmailCandidates(contact).some((email) => userEmails.has(email)))
     .forEach((contact) => candidates.push(contact.phone));
   return candidates.some((candidate) => {
     const normalized = normalizePhone(candidate);
@@ -977,9 +1006,10 @@ function memberLastNameMatches(user, lastName) {
   const submitted = String(lastName || "").trim().toLowerCase();
   if (submitted.length < 2) return false;
   const candidates = [user.name];
+  const userEmails = new Set(memberEmailCandidates(user));
   const contacts = readJsonFile(contactsFile(), []);
   contacts
-    .filter((contact) => normalizeEmail(contact.email) === normalizeEmail(user.email))
+    .filter((contact) => memberEmailCandidates(contact).some((email) => userEmails.has(email)))
     .forEach((contact) => candidates.push(contact.name));
   return candidates.some((candidate) => {
     const parts = String(candidate || "").toLowerCase().split(/\s+/).filter(Boolean);
