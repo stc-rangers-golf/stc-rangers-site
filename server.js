@@ -183,6 +183,32 @@ function writeJsonFile(file, value) {
   fs.writeFileSync(file, JSON.stringify(value, null, 2) + "\n");
 }
 
+function mergeUsersPreservingAuth(incomingUsers) {
+  if (!Array.isArray(incomingUsers)) return incomingUsers;
+  const currentUsers = loadUsers();
+  const currentByEmail = new Map();
+  const currentByName = new Map();
+  currentUsers.forEach((user) => {
+    memberEmailCandidates(user).forEach((email) => currentByEmail.set(email, user));
+    const name = normalizeMemberName(user.name);
+    if (name && !currentByName.has(name)) currentByName.set(name, user);
+  });
+  return incomingUsers.map((incoming) => {
+    if (!incoming || typeof incoming !== "object") return incoming;
+    const existing =
+      memberEmailCandidates(incoming).map((email) => currentByEmail.get(email)).find(Boolean) ||
+      currentByName.get(normalizeMemberName(incoming.name));
+    if (!existing) return incoming;
+    return {
+      ...incoming,
+      salt: existing.salt,
+      passwordHash: existing.passwordHash,
+      passwordResetRequired: existing.passwordResetRequired,
+      createdFromContactExport: existing.createdFromContactExport,
+    };
+  });
+}
+
 function updateJamesMcgowanDisplayEmail() {
   const displayEmail = "james.mcgowan@hotmail.com";
   updateMemberEmailByName(privateFile("contacts"), "James Mcgowan", displayEmail);
@@ -494,6 +520,7 @@ function bootstrapDataFiles() {
 function writeBootstrapPayload(payload, options = {}) {
   const allowed = options.allowed || bootstrapDataFiles();
   const allowedPublic = options.allowedPublic || new Set(["home.json"]);
+  const preserveUserAuth = options.preserveUserAuth === true;
   const incoming = payload.files && typeof payload.files === "object" ? payload.files : {};
   const publicIncoming = payload.publicFiles && typeof payload.publicFiles === "object" ? payload.publicFiles : {};
   const written = [];
@@ -507,6 +534,7 @@ function writeBootstrapPayload(payload, options = {}) {
         throw new Error(`Invalid JSON for ${filename}.`);
       }
     }
+    if (preserveUserAuth && filename === "users.local.json") value = mergeUsersPreservingAuth(value);
     writeJsonFile(dataPath("private", filename), value);
     written.push(filename);
   }
@@ -1068,7 +1096,7 @@ async function handleApi(req, res, url) {
       ]);
       return sendJson(res, 200, {
         ok: true,
-        written: writeBootstrapPayload(payload, { allowed, allowedPublic: new Set(["committee.json", "home.json"]) }),
+        written: writeBootstrapPayload(payload, { allowed, allowedPublic: new Set(["committee.json", "home.json"]), preserveUserAuth: true }),
       });
     } catch (error) {
       return sendJson(res, 400, { ok: false, message: error.message });
