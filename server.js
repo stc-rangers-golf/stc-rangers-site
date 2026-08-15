@@ -1146,18 +1146,17 @@ async function handleApi(req, res, url) {
     if (tooManyAttempts(req)) return sendJson(res, 429, { ok: false, message: "Too many login attempts. Try again shortly." });
 
     const existingUser = findUser(payload.email);
-    if (existingUser && existingUser.passwordResetRequired) {
-      return sendJson(res, 403, {
-        ok: false,
-        requiresPasswordSetup: true,
-        resetToken: "",
-        message: "This account needs a new Rangers password. Enter your last name below and choose a new password. Phone number is optional.",
-      });
-    }
-
     const userRecord = verifyLoginRecord(payload.email, payload.password);
     if (!userRecord) {
       if (existingUser) {
+        if (existingUser.passwordResetRequired) {
+          return sendJson(res, 403, {
+            ok: false,
+            requiresPasswordSetup: true,
+            resetToken: "",
+            message: "This account needs a new Rangers password. Enter your last name below and choose a new password. Phone number is optional.",
+          });
+        }
         return sendJson(res, 401, {
           ok: false,
           message: "Login failed. Check your email and password, or tap Forgot password.",
@@ -1171,13 +1170,14 @@ async function handleApi(req, res, url) {
     }
 
     if (userRecord.passwordResetRequired) {
-      const entry = await createPasswordReset(req, userRecord);
-      return sendJson(res, 403, {
-        ok: false,
-        requiresPasswordSetup: true,
-        resetToken: entry.resetToken,
-        message: "Temporary password accepted. Choose your own password now.",
-      });
+      const users = loadUsers();
+      const index = users.findIndex((item) => memberEmailCandidates(item).includes(normalizeEmail(payload.email)));
+      if (index !== -1) {
+        users[index].passwordResetRequired = false;
+        users[index].updatedAt = new Date().toISOString();
+        writeUsers(users);
+      }
+      userRecord.passwordResetRequired = false;
     }
 
     const stayLoggedIn = payload.stayLoggedIn === true;
