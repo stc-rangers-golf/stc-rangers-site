@@ -636,13 +636,30 @@ function verifyLoginRecord(email, password) {
   return user;
 }
 
-function tooManyAttempts(req) {
-  const key = req.socket.remoteAddress || "local";
+function loginAttemptKey(req) {
+  return req.socket.remoteAddress || "local";
+}
+
+function recentFailedLoginAttempts(req) {
+  const key = loginAttemptKey(req);
   const now = Date.now();
   const attempts = (loginAttempts.get(key) || []).filter((time) => now - time < 10 * 60 * 1000);
-  attempts.push(now);
   loginAttempts.set(key, attempts);
-  return attempts.length > 20;
+  return { key, attempts };
+}
+
+function tooManyAttempts(req) {
+  return recentFailedLoginAttempts(req).attempts.length > 20;
+}
+
+function recordFailedLoginAttempt(req) {
+  const { key, attempts } = recentFailedLoginAttempts(req);
+  attempts.push(Date.now());
+  loginAttempts.set(key, attempts);
+}
+
+function clearFailedLoginAttempts(req) {
+  loginAttempts.delete(loginAttemptKey(req));
 }
 
 function privateFile(name) {
@@ -1205,11 +1222,11 @@ async function handleApi(req, res, url) {
       return sendJson(res, 400, { ok: false, message: "Invalid login request." });
     }
 
-    if (tooManyAttempts(req)) return sendJson(res, 429, { ok: false, message: "Too many login attempts. Try again shortly." });
-
     const existingUser = findUser(payload.email);
     const userRecord = verifyLoginRecord(payload.email, payload.password);
     if (!userRecord) {
+      if (tooManyAttempts(req)) return sendJson(res, 429, { ok: false, message: "Too many login attempts. Try again shortly." });
+      recordFailedLoginAttempt(req);
       if (existingUser) {
         if (existingUser.passwordResetRequired) {
           return sendJson(res, 403, {
@@ -1231,6 +1248,7 @@ async function handleApi(req, res, url) {
       });
     }
 
+    clearFailedLoginAttempts(req);
     if (userRecord.passwordResetRequired) {
       const users = loadUsers();
       const index = users.findIndex((item) => memberEmailCandidates(item).includes(normalizeEmail(payload.email)));
@@ -1270,7 +1288,7 @@ async function handleApi(req, res, url) {
     }
     const entry = await createPasswordReset(req, user);
     const verifiedByPhone = memberPhoneMatches(user, payload.phone);
-    const verifiedByLastName = Boolean(user.passwordResetRequired) && memberLastNameMatches(user, payload.lastName);
+    const verifiedByLastName = memberLastNameMatches(user, payload.lastName);
     const canUseInlineReset = entry.delivery !== "sent" && (verifiedByPhone || verifiedByLastName);
     return sendJson(res, 200, {
       ok: true,
