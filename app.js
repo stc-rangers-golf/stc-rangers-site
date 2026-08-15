@@ -37,9 +37,9 @@ function ensureLoginModalMarkup() {
         </div>
         <div id="forgotPasswordPanel" class="hidden" hidden>
           <h2>Forgot Password</h2>
-          <p>Enter the email, phone number, and last name on your Rangers account. If email delivery is unavailable, these details let you set the password here.</p>
+          <p>Enter your member email and last name to set a new password. Phone number is optional.</p>
           <label>Member Email<input id="forgotPasswordEmail" type="email" autocomplete="email" placeholder="member@email.com" /></label>
-          <label>Phone Number On File<input id="forgotPasswordPhone" type="tel" autocomplete="tel" placeholder="Phone number" /></label>
+          <label>Phone Number On File<input id="forgotPasswordPhone" type="tel" autocomplete="tel" placeholder="Optional" /></label>
           <label>Last Name<input id="forgotPasswordLastName" type="text" autocomplete="family-name" placeholder="Last name" /></label>
           <div class="modal-actions">
             <button class="button button-red full" type="button" id="sendResetLinkButton">Continue</button>
@@ -1213,10 +1213,10 @@ loginForm.addEventListener("submit", async (event) => {
         document.querySelector("#resetPasswordInput").focus();
         return;
       }
-      showLoginSubpanel("forgotPasswordPanel", result.message || "This account needs a password setup. Use Forgot password and we will send a setup link.");
+      showLoginSubpanel("forgotPasswordPanel", result.message || "This account needs a password setup. Enter your last name and choose a new password.");
       document.querySelector("#forgotPasswordPhone").value = "";
       document.querySelector("#forgotPasswordLastName").value = "";
-      document.querySelector("#forgotPasswordEmail").focus();
+      document.querySelector("#forgotPasswordLastName").focus();
       return;
     }
     if (result.offerAccountSetup) {

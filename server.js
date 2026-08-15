@@ -1151,7 +1151,7 @@ async function handleApi(req, res, url) {
         ok: false,
         requiresPasswordSetup: true,
         resetToken: "",
-        message: "This migrated account needs a new Rangers password. Tap Forgot password, enter the phone number and last name on file, and choose a new password.",
+        message: "This account needs a new Rangers password. Enter your last name below and choose a new password. Phone number is optional.",
       });
     }
 
@@ -1219,7 +1219,7 @@ async function handleApi(req, res, url) {
         ? `Password setup link sent to ${user.email}. Check inbox and spam.`
         : canUseInlineReset
           ? `${verifiedByPhone ? "Phone number" : "Last name"} verified. Choose a new password now.`
-          : "Email delivery is unavailable right now. Enter the phone number and last name on file so we can verify you here.",
+          : "Enter the last name on the member account to choose a new password here. Phone number is optional.",
     });
   }
 
