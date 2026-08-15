@@ -1103,6 +1103,40 @@ async function handleApi(req, res, url) {
     }
   }
 
+  if (url.pathname === "/api/rangers-rick/repair-user-auth" && req.method === "POST") {
+    if (!rangersRickAuthorized(req, url)) return sendJson(res, 404, { ok: false, message: "Not found." });
+    const body = await readBody(req, 1_000_000);
+    let payload = {};
+    try {
+      payload = JSON.parse(body || "{}");
+    } catch {
+      return sendJson(res, 400, { ok: false, message: "Invalid repair request." });
+    }
+    const email = normalizeEmail(payload.email);
+    if (!email) return sendJson(res, 400, { ok: false, message: "Email is required." });
+
+    const users = loadUsers();
+    const index = users.findIndex((user) => normalizeEmail(user.email) === email || (Array.isArray(user.alternateEmails) && user.alternateEmails.some((alternate) => normalizeEmail(alternate) === email)));
+    if (index < 0) return sendJson(res, 404, { ok: false, message: "User not found." });
+
+    const user = users[index];
+    if (typeof payload.passwordResetRequired === "boolean") user.passwordResetRequired = payload.passwordResetRequired;
+    if (typeof payload.createdFromContactExport === "boolean") user.createdFromContactExport = payload.createdFromContactExport;
+    if (payload.phone !== undefined) user.phone = normalizePhone(payload.phone);
+    user.updatedAt = new Date().toISOString();
+    users[index] = user;
+    writeUsers(users);
+    return sendJson(res, 200, {
+      ok: true,
+      user: {
+        email: user.email,
+        name: user.name,
+        passwordResetRequired: Boolean(user.passwordResetRequired),
+        createdFromContactExport: Boolean(user.createdFromContactExport),
+      },
+    });
+  }
+
   if (url.pathname === "/api/codex-bulk-temp-password" && req.method === "POST") {
     const repairFile = dataPath("private", "codex-bulk-temp-password-used.local.json");
     if (url.searchParams.get("key") !== "d85c126ba56714517a00ec4b320b838d1ba7137580481ee7" || fs.existsSync(repairFile)) {
