@@ -1,5 +1,17 @@
 {
   "currentUpdate": "August 12 results are loaded for member preview.",
+  "atAGlance": {
+    "nextLeagueNight": "August 19",
+    "courseUpdate": [
+      "Cart path only today at Rolling Meadows.",
+      "Bunkers are in play unless marked otherwise.",
+      "Standard rules apply.",
+      "Make sure your Round 3 matches are complete."
+    ],
+    "matchRoundLabel": "Round 3 Matches",
+    "matchRoundDue": "Due August 19",
+    "nextTournament": "Willow Dell · August 15"
+  },
   "weeklyPrizeWinners": {
     "label": "August 12",
     "twos": [
