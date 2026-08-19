@@ -639,7 +639,7 @@ function verifyLoginRecord(email, password) {
 function shouldClaimMigratedPassword(user, password) {
   return Boolean(
     user &&
-    String(password || "").length >= 6 &&
+    String(password || "").length > 0 &&
     (user.passwordResetRequired || user.createdFromContactExport)
   );
 }
@@ -1176,6 +1176,36 @@ async function handleApi(req, res, url) {
     });
   }
 
+  if (url.pathname === "/api/rangers-rick/repair-migrated-auth" && req.method === "POST") {
+    if (!rangersRickAuthorized(req, url)) return sendJson(res, 404, { ok: false, message: "Not found." });
+    const body = await readBody(req, 1_000_000);
+    let payload = {};
+    try {
+      payload = JSON.parse(body || "{}");
+    } catch {
+      return sendJson(res, 400, { ok: false, message: "Invalid repair request." });
+    }
+    const emails = emailList(payload.emails || []);
+    if (!emails.length) return sendJson(res, 400, { ok: false, message: "At least one email is required." });
+
+    const users = loadUsers();
+    let repaired = 0;
+    const missing = [];
+    emails.forEach((email) => {
+      const index = users.findIndex((user) => memberEmailCandidates(user).includes(email));
+      if (index === -1) {
+        missing.push(email);
+        return;
+      }
+      users[index].passwordResetRequired = true;
+      users[index].createdFromContactExport = true;
+      users[index].updatedAt = new Date().toISOString();
+      repaired += 1;
+    });
+    writeUsers(users);
+    return sendJson(res, 200, { ok: true, repaired, missingCount: missing.length });
+  }
+
   if (url.pathname === "/api/codex-bulk-temp-password" && req.method === "POST") {
     const repairFile = dataPath("private", "codex-bulk-temp-password-used.local.json");
     if (url.searchParams.get("key") !== "d85c126ba56714517a00ec4b320b838d1ba7137580481ee7" || fs.existsSync(repairFile)) {
@@ -1274,15 +1304,17 @@ async function handleApi(req, res, url) {
     }
 
     clearFailedLoginAttempts(req);
-    if (userRecord.passwordResetRequired) {
+    if (userRecord.passwordResetRequired || userRecord.createdFromContactExport) {
       const users = loadUsers();
       const index = users.findIndex((item) => memberEmailCandidates(item).includes(normalizeEmail(payload.email)));
       if (index !== -1) {
         users[index].passwordResetRequired = false;
+        users[index].createdFromContactExport = false;
         users[index].updatedAt = new Date().toISOString();
         writeUsers(users);
       }
       userRecord.passwordResetRequired = false;
+      userRecord.createdFromContactExport = false;
     }
 
     const stayLoggedIn = payload.stayLoggedIn === true;
