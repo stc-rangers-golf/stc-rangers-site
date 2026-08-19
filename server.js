@@ -1776,8 +1776,15 @@ function serveStatic(req, res, url) {
   const hasExtension = Boolean(path.extname(url.pathname));
   const shouldServeApp = appRoutes.has(url.pathname) || (!hasExtension && !url.pathname.startsWith("/api/"));
   const cleanPath = decodeURIComponent(shouldServeApp ? "/index.html" : url.pathname);
-  const file = path.normalize(path.join(root, cleanPath));
-  if (!file.startsWith(root)) return send(res, 403, "Forbidden");
+  const publicDataPrefix = "/data/public/";
+  const servingPublicData = cleanPath.startsWith(publicDataPrefix);
+  const file = path.normalize(
+    servingPublicData
+      ? path.join(dataRoot, "public", cleanPath.slice(publicDataPrefix.length))
+      : path.join(root, cleanPath)
+  );
+  const allowedRoot = servingPublicData ? path.join(dataRoot, "public") : root;
+  if (!file.startsWith(allowedRoot)) return send(res, 403, "Forbidden");
   if (!fs.existsSync(file) || fs.statSync(file).isDirectory()) return send(res, 404, "Not found");
 
   const ext = path.extname(file).toLowerCase();
