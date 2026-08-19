@@ -636,6 +636,28 @@ function verifyLoginRecord(email, password) {
   return user;
 }
 
+function shouldClaimMigratedPassword(user, password) {
+  return Boolean(
+    user &&
+    String(password || "").length >= 6 &&
+    (user.passwordResetRequired || user.createdFromContactExport)
+  );
+}
+
+function claimMigratedPassword(email, password) {
+  const users = loadUsers();
+  const normalizedEmail = normalizeEmail(email);
+  const index = users.findIndex((user) => memberEmailCandidates(user).includes(normalizedEmail));
+  if (index === -1 || !shouldClaimMigratedPassword(users[index], password)) return null;
+  users[index].salt = crypto.randomBytes(16).toString("hex");
+  users[index].passwordHash = hashPassword(users[index].salt, password);
+  users[index].passwordResetRequired = false;
+  users[index].createdFromContactExport = false;
+  users[index].updatedAt = new Date().toISOString();
+  writeUsers(users);
+  return users[index];
+}
+
 function loginAttemptKey(req) {
   return req.socket.remoteAddress || "local";
 }
@@ -1223,7 +1245,10 @@ async function handleApi(req, res, url) {
     }
 
     const existingUser = findUser(payload.email);
-    const userRecord = verifyLoginRecord(payload.email, payload.password);
+    let userRecord = verifyLoginRecord(payload.email, payload.password);
+    if (!userRecord && shouldClaimMigratedPassword(existingUser, payload.password)) {
+      userRecord = claimMigratedPassword(payload.email, payload.password);
+    }
     if (!userRecord) {
       if (tooManyAttempts(req)) return sendJson(res, 429, { ok: false, message: "Too many login attempts. Try again shortly." });
       recordFailedLoginAttempt(req);
@@ -1316,7 +1341,7 @@ async function handleApi(req, res, url) {
     const found = resetRecord(payload.token);
     if (!found) return sendJson(res, 400, { ok: false, message: "This reset link is invalid or expired." });
     const users = loadUsers();
-    const index = users.findIndex((item) => String(item.email || "").toLowerCase() === String(found.record.email || "").toLowerCase());
+    const index = users.findIndex((item) => memberEmailCandidates(item).includes(normalizeEmail(found.record.email)));
     if (index === -1) return sendJson(res, 404, { ok: false, message: "Member account not found." });
     users[index].salt = crypto.randomBytes(16).toString("hex");
     users[index].passwordHash = hashPassword(users[index].salt, nextPassword);
