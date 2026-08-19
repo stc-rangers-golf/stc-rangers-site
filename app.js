@@ -24,7 +24,6 @@ function ensureLoginModalMarkup() {
           <p>Log in to view standings, matches, tournaments, the Rant, and member contact details.</p>
           <label>Email<input id="emailInput" type="email" autocomplete="username" placeholder="member@email.com" /></label>
           <label>Password<input id="passwordInput" type="password" autocomplete="current-password" placeholder="Password" /></label>
-          <label class="login-check-row"><input id="stayLoggedInInput" type="checkbox" />Stay logged in</label>
           <button class="button button-red full" type="submit">Log In</button>
         </div>
         <div id="resetPanel" class="hidden" hidden>
@@ -1199,7 +1198,6 @@ loginForm.addEventListener("submit", async (event) => {
     body: JSON.stringify({
       email: normalizeEmailInput(document.querySelector("#emailInput").value),
       password: document.querySelector("#passwordInput").value,
-      stayLoggedIn: document.querySelector("#stayLoggedInInput").checked,
     }),
   });
   const result = await response.json().catch(() => ({}));

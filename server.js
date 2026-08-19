@@ -11,7 +11,6 @@ const sessionSecret = process.env.STC_SESSION_SECRET || "stc-rangers-session-v2"
 const sessions = new Map();
 const loginAttempts = new Map();
 const defaultSessionMaxAge = 8 * 60 * 60;
-const stayLoggedInSessionMaxAge = 90 * 24 * 60 * 60;
 
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",
@@ -1317,12 +1316,10 @@ async function handleApi(req, res, url) {
       userRecord.createdFromContactExport = false;
     }
 
-    const stayLoggedIn = payload.stayLoggedIn === true;
-    const maxAge = stayLoggedIn ? stayLoggedInSessionMaxAge : defaultSessionMaxAge;
     const user = publicUser(userRecord);
-    const { sid } = createSessionForUser(req, user, maxAge);
+    const { sid } = createSessionForUser(req, user);
     return sendJson(res, 200, { ok: true, user }, {
-      "Set-Cookie": sessionCookie(req, sid, maxAge),
+      "Set-Cookie": sessionCookie(req, sid),
     });
   }
 
@@ -1835,13 +1832,20 @@ function serveStatic(req, res, url) {
   const cleanPath = decodeURIComponent(shouldServeApp ? "/index.html" : url.pathname);
   const publicDataPrefix = "/data/public/";
   const servingPublicData = cleanPath.startsWith(publicDataPrefix);
-  const file = path.normalize(
+  let file = path.normalize(
     servingPublicData
       ? path.join(dataRoot, "public", cleanPath.slice(publicDataPrefix.length))
       : path.join(root, cleanPath)
   );
   const allowedRoot = servingPublicData ? path.join(dataRoot, "public") : root;
   if (!file.startsWith(allowedRoot)) return send(res, 403, "Forbidden");
+  if (servingPublicData && (!fs.existsSync(file) || fs.statSync(file).isDirectory())) {
+    const fallbackFile = path.normalize(path.join(root, "data", "public", cleanPath.slice(publicDataPrefix.length)));
+    const fallbackRoot = path.join(root, "data", "public");
+    if (fallbackFile.startsWith(fallbackRoot) && fs.existsSync(fallbackFile) && !fs.statSync(fallbackFile).isDirectory()) {
+      file = fallbackFile;
+    }
+  }
   if (!fs.existsSync(file) || fs.statSync(file).isDirectory()) return send(res, 404, "Not found");
 
   const ext = path.extname(file).toLowerCase();
