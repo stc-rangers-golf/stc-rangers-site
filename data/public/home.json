@@ -1,40 +1,23 @@
 {
-  "currentUpdate": "August 12 results are loaded for member preview.",
-  "atAGlance": {
-    "nextLeagueNight": "August 19",
-    "courseUpdate": [
-      "Cart path only today at Rolling Meadows.",
-      "Bunkers are in play unless marked otherwise.",
-      "Standard rules apply.",
-      "Make sure your Round 3 matches are complete."
-    ],
-    "matchRoundLabel": "Round 3 Matches",
-    "matchRoundDue": "Due August 19",
-    "nextTournament": "Willow Dell · August 15"
-  },
+  "currentUpdate": "August 19 results are loaded for member preview.",
   "weeklyPrizeWinners": {
-    "label": "August 12",
-    "twos": [
-      "Doug Lawrence",
-      "James McGowan",
-      "Brian Schuhmann",
-      "Bob Carpenter"
-    ],
+    "label": "August 19",
+    "twos": [],
     "closestToPin": [
       {
         "hole": 4,
-        "name": "Mark Barrick",
-        "source": "Rangers Rick August 12 workbook"
+        "name": "Gary McGuchan",
+        "source": "Casey confirmed August 19"
       },
       {
         "hole": 7,
-        "name": "Brian Schuhmann",
-        "source": "Rangers Rick August 12 workbook"
+        "name": "Gary Dick",
+        "source": "Casey confirmed August 19"
       }
     ]
   },
   "weeklyNews": {
-    "headline": "August 12 Prize Winners",
+    "headline": "August 19 Prize Winners",
     "body": "Twos, closest-to-pin winners, weekly scores, match results, handicap changes, and updated standings are available after member login."
   },
   "memorial": {
@@ -42,5 +25,17 @@
     "kicker": "Our leader, our friend.",
     "body": "Gone but not forgotten.",
     "closing": "RIP Big Chum."
+  },
+  "atAGlance": {
+    "nextLeagueNight": "August 26",
+    "courseUpdate": [
+      "The golf course is open today.",
+      "Bunkers are in play unless marked otherwise.",
+      "Standard rules apply.",
+      "Make sure your matches are complete."
+    ],
+    "matchRoundLabel": "Round 3 Matches",
+    "matchRoundDue": "Due August 19",
+    "nextTournament": "Whisky Run · September 19"
   }
 }
