@@ -204,6 +204,7 @@ function mergeUsersPreservingAuth(incomingUsers) {
       passwordHash: existing.passwordHash,
       passwordResetRequired: existing.passwordResetRequired,
       createdFromContactExport: existing.createdFromContactExport,
+      photoDataUrl: existing.photoDataUrl || incoming.photoDataUrl || "",
     };
   });
 }

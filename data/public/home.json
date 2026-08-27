@@ -1,23 +1,27 @@
 {
-  "currentUpdate": "August 19 results are loaded for member preview.",
+  "currentUpdate": "August 26 results are loaded for member preview.",
   "weeklyPrizeWinners": {
-    "label": "August 19",
-    "twos": [],
+    "label": "August 26",
+    "twos": [
+      "Darren Miller",
+      "Bryan Schuhmann",
+      "Stan Sadowski"
+    ],
     "closestToPin": [
       {
         "hole": 4,
-        "name": "Gary McGuchan",
-        "source": "Casey confirmed August 19"
+        "name": "Jarrod Burtt",
+        "source": "President Pete workbook"
       },
       {
         "hole": 7,
-        "name": "Gary Dick",
-        "source": "Casey confirmed August 19"
+        "name": "Bryan Schuhmann",
+        "source": "President Pete workbook"
       }
     ]
   },
   "weeklyNews": {
-    "headline": "August 19 Prize Winners",
+    "headline": "August 26 Prize Winners",
     "body": "Twos, closest-to-pin winners, weekly scores, match results, handicap changes, and updated standings are available after member login."
   },
   "memorial": {
@@ -27,15 +31,15 @@
     "closing": "RIP Big Chum."
   },
   "atAGlance": {
-    "nextLeagueNight": "August 26",
+    "nextLeagueNight": "September 2",
     "courseUpdate": [
-      "The golf course is open today.",
+      "Standard rules apply unless posted otherwise.",
       "Bunkers are in play unless marked otherwise.",
-      "Standard rules apply.",
+      "Check in before your tee time.",
       "Make sure your matches are complete."
     ],
-    "matchRoundLabel": "Round 3 Matches",
-    "matchRoundDue": "Due August 19",
+    "matchRoundLabel": "Round 4 Matches",
+    "matchRoundDue": "Complete as soon as possible",
     "nextTournament": "Whisky Run · September 19"
   }
 }

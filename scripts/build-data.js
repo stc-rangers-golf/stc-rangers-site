@@ -84,6 +84,10 @@ const latestCompleteWeekly =
     .sort((a, b) => String(b.weekDate).localeCompare(String(a.weekDate)))[0] ||
   weekly.find((row) => row.weekDate === "2026-07-08") ||
   weekly[0];
+const nextLeagueNight =
+  weekly
+    .filter((row) => String(row.weekDate || "") > String(latestCompleteWeekly.weekDate || "") && row.status === "Pending")
+    .sort((a, b) => String(a.weekDate).localeCompare(String(b.weekDate)))[0]?.displayLabel || "TBD";
 const currentUpdate =
   latestCompleteWeekly.weekDate === "2026-07-22"
     ? `${latestCompleteWeekly.displayLabel} results are loaded for member preview. Carts are 90 degrees or scatter; bunkers are in play unless full of water.`
@@ -97,13 +101,25 @@ const publicHome = {
   },
   weeklyNews: {
     headline: `${latestCompleteWeekly.displayLabel} Prize Winners`,
-    body: "Twos, closest-to-pin winners, weekly scores, and updated standings are available after member login.",
+    body: "Twos, closest-to-pin winners, weekly scores, match results, handicap changes, and updated standings are available after member login.",
   },
   memorial: {
     title: "Peter McBride Memorial",
     kicker: "Our leader, our friend.",
     body: "Gone but not forgotten.",
     closing: "RIP Big Chum.",
+  },
+  atAGlance: {
+    nextLeagueNight,
+    courseUpdate: [
+      "Standard rules apply unless posted otherwise.",
+      "Bunkers are in play unless marked otherwise.",
+      "Check in before your tee time.",
+      "Make sure your matches are complete.",
+    ],
+    matchRoundLabel: "Round 4 Matches",
+    matchRoundDue: "Complete as soon as possible",
+    nextTournament: "Whisky Run · September 19",
   },
 };
 

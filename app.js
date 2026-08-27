@@ -561,7 +561,16 @@ function findMemberPhoto(name) {
 
   const contacts = Array.isArray(state.data.contacts) ? state.data.contacts : [];
   const contact = contacts.find((item) => normalizePersonName(item.name) === target);
-  return contact?.photoDataUrl || "";
+  if (contact?.photoDataUrl) return contact.photoDataUrl;
+
+  const matches = Array.isArray(state.data.matches) ? state.data.matches : [];
+  for (const match of matches) {
+    const matchContact = match.contacts?.[name];
+    if (matchContact?.photoDataUrl) return matchContact.photoDataUrl;
+    const namedContact = Object.entries(match.contacts || {}).find(([playerName]) => normalizePersonName(playerName) === target);
+    if (namedContact?.[1]?.photoDataUrl) return namedContact[1].photoDataUrl;
+  }
+  return "";
 }
 
 function findCurrentStanding() {
@@ -784,6 +793,7 @@ function renderMatches() {
       <div class="division-tabs">
         ${divisions.map((division) => `<button class="seg ${division === current ? "active" : ""}" data-division="${division}" type="button">${division === "Club Championship" ? "Club" : division}</button>`).join("")}
       </div>
+      ${renderFinalsSpotlight(current, playableMatches)}
       <div class="panel bracket-shell">
         <div class="bracket-board bracket-board-${escapeHtml(String(current).toLowerCase().replace(/[^a-z0-9]+/g, "-"))}">
           ${rounds.map(([round, roundMatches]) => `
@@ -810,6 +820,80 @@ function renderMatches() {
       renderMatches();
     });
   });
+}
+
+function renderFinalsSpotlight(division, matches) {
+  const spotlight = getFinalsSpotlight(matches);
+  if (!spotlight) return "";
+  const finalistCards = spotlight.players.map((player) => renderFinalistCard(player)).join("");
+  return html`
+    <section class="finals-spotlight" aria-label="${escapeHtml(division)} finals spotlight">
+      <div class="finals-spotlight-head">
+        <span>${escapeHtml(division === "Club Championship" ? "Club Championship" : `${division} Division`)}</span>
+        <h2>Finals Spotlight</h2>
+        <p>${escapeHtml(spotlight.roundLabel)} contenders</p>
+      </div>
+      <div class="finalist-grid">
+        ${finalistCards}
+      </div>
+    </section>
+  `;
+}
+
+function getFinalsSpotlight(matches) {
+  const playable = matches.filter((match) => !isBracketVacancy(match));
+  const rounds = groupByRound(playable);
+  if (!rounds.length) return null;
+
+  const finalRound = rounds.find(([round]) => /final|championship/i.test(round));
+  const isFinalRound = Boolean(finalRound);
+  const [roundLabel, roundMatches] = finalRound || rounds[rounds.length - 1];
+  const players = [];
+  roundMatches.forEach((match) => {
+    const matchPlayers = [
+      { name: match.playerOne, handicap: match.playerOneHandicap, opponent: match.playerTwo, match },
+      { name: match.playerTwo, handicap: match.playerTwoHandicap, opponent: match.playerOne, match },
+    ];
+    const spotlightPlayers = !isFinalRound && match.winner
+      ? matchPlayers.filter((player) => normalizePersonName(player.name) === normalizePersonName(match.winner))
+      : matchPlayers;
+    spotlightPlayers.forEach((player) => {
+      if (!isSpotlightPlayer(player.name)) return;
+      const key = normalizePersonName(player.name);
+      if (players.some((existing) => normalizePersonName(existing.name) === key)) return;
+      players.push(player);
+    });
+  });
+
+  if (!players.length) return null;
+  return { roundLabel, players };
+}
+
+function isSpotlightPlayer(name) {
+  const value = String(name || "").trim();
+  if (!value) return false;
+  return !/(bye|tbd|to be decided|awaiting)/i.test(value);
+}
+
+function renderFinalistCard(player) {
+  const photoDataUrl = findMemberPhoto(player.name);
+  const photo = photoDataUrl
+    ? `<img src="${escapeHtml(photoDataUrl)}" alt="${escapeHtml(player.name)} profile photo" />`
+    : `<span>${escapeHtml(getInitials(player.name))}</span>`;
+  const result = getPublicMatchResult(player.match);
+  const detail = player.match.winner
+    ? `Winner: ${player.match.winner}`
+    : `vs ${player.opponent || "TBD"}`;
+  return html`
+    <article class="finalist-card">
+      <div class="finalist-photo">${photo}</div>
+      <div>
+        <h3>${escapeHtml(player.name)}</h3>
+        <p>${escapeHtml(detail)}</p>
+        <span>${escapeHtml(formatHandicap(player.handicap) ? `HCP ${formatHandicap(player.handicap)}` : "HCP pending")}${result ? ` · ${escapeHtml(result)}` : ""}</span>
+      </div>
+    </article>
+  `;
 }
 
 function isBracketVacancy(match) {
