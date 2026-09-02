@@ -558,6 +558,15 @@ function hashPassword(salt, password) {
   return crypto.createHash("sha256").update(String(salt) + String(password)).digest("hex");
 }
 
+function passwordCandidates(password) {
+  const raw = String(password || "");
+  const trimmed = raw.trim();
+  const candidates = [raw, trimmed];
+  if (trimmed.endsWith("?")) candidates.push(trimmed.slice(0, -1));
+  else candidates.push(`${trimmed}?`);
+  return [...new Set(candidates.filter(Boolean))];
+}
+
 function normalizeEmail(email) {
   const normalized = String(email || "").trim().toLowerCase();
   return normalized.replace(/@(gmail|hotmail|outlook|yahoo)\.co$/, "@$1.com");
@@ -622,8 +631,11 @@ function verifyLogin(email, password) {
   const user = findUser(email);
   if (!user || !password) return null;
   const expected = Buffer.from(String(user.passwordHash || ""), "hex");
-  const actual = Buffer.from(hashPassword(user.salt || "", password), "hex");
-  if (expected.length !== actual.length || !crypto.timingSafeEqual(expected, actual)) return null;
+  const valid = passwordCandidates(password).some((candidate) => {
+    const actual = Buffer.from(hashPassword(user.salt || "", candidate), "hex");
+    return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
+  });
+  if (!valid) return null;
   return publicUser(user);
 }
 
@@ -631,8 +643,11 @@ function verifyLoginRecord(email, password) {
   const user = findUser(email);
   if (!user || !password) return null;
   const expected = Buffer.from(String(user.passwordHash || ""), "hex");
-  const actual = Buffer.from(hashPassword(user.salt || "", password), "hex");
-  if (expected.length !== actual.length || !crypto.timingSafeEqual(expected, actual)) return null;
+  const valid = passwordCandidates(password).some((candidate) => {
+    const actual = Buffer.from(hashPassword(user.salt || "", candidate), "hex");
+    return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
+  });
+  if (!valid) return null;
   return user;
 }
 
