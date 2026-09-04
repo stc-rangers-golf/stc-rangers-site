@@ -1,27 +1,18 @@
 {
-  "currentUpdate": "August 26 results are loaded for member preview.",
+  "currentUpdate": "September 2 results are loaded for member preview.",
   "weeklyPrizeWinners": {
-    "label": "August 26",
+    "label": "September 2",
     "twos": [
-      "Darren Miller",
-      "Bryan Schuhmann",
-      "Stan Sadowski"
+      "James McGowan",
+      "Doug Lawrence",
+      "Dave Lees",
+      "Mike Beckman",
+      "Steve Murphy"
     ],
-    "closestToPin": [
-      {
-        "hole": 4,
-        "name": "Jarrod Burtt",
-        "source": "President Pete workbook"
-      },
-      {
-        "hole": 7,
-        "name": "Bryan Schuhmann",
-        "source": "President Pete workbook"
-      }
-    ]
+    "closestToPin": []
   },
   "weeklyNews": {
-    "headline": "August 26 Prize Winners",
+    "headline": "September 2 Prize Winners",
     "body": "Twos, closest-to-pin winners, weekly scores, match results, handicap changes, and updated standings are available after member login."
   },
   "memorial": {
@@ -31,7 +22,7 @@
     "closing": "RIP Big Chum."
   },
   "atAGlance": {
-    "nextLeagueNight": "September 2",
+    "nextLeagueNight": "September 9",
     "courseUpdate": [
       "Standard rules apply unless posted otherwise.",
       "Bunkers are in play unless marked otherwise.",
