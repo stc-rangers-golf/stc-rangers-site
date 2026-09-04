@@ -9,7 +9,18 @@
       "Mike Beckman",
       "Steve Murphy"
     ],
-    "closestToPin": []
+    "closestToPin": [
+      {
+        "hole": 4,
+        "name": "Bernie Jones",
+        "source": "President Pete workbook"
+      },
+      {
+        "hole": 7,
+        "name": "Gary Dick",
+        "source": "President Pete workbook"
+      }
+    ]
   },
   "weeklyNews": {
     "headline": "September 2 Prize Winners",
