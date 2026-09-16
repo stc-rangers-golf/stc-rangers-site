@@ -1144,7 +1144,6 @@ async function handleApi(req, res, url) {
         "contacts.json",
         "matches.json",
         "standings.json",
-        "tournament-rsvps.local.json",
         "users.local.json",
         "weekly.json",
       ]);
