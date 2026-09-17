@@ -750,6 +750,44 @@ function publicRsvpSummary(items) {
   return summary;
 }
 
+function upsertTournamentRsvps(entries) {
+  if (!Array.isArray(entries) || !entries.length) throw new Error("No RSVP entries provided.");
+  const tournaments = enrichTournaments(readJsonFile(seedDataFile("private", "tournaments.json"), []));
+  const all = readJsonFile(rsvpsFile(), []);
+  const now = new Date().toISOString();
+  const updated = [];
+  entries.forEach((entry) => {
+    const tournamentId = String(entry && entry.tournamentId ? entry.tournamentId : "").trim();
+    const status = String(entry && entry.status ? entry.status : "Going").trim();
+    const email = String(entry && entry.email ? entry.email : "").trim().toLowerCase();
+    const name = String(entry && entry.name ? entry.name : "").trim();
+    if (!tournamentId || !["Going", "Maybe", "Not Going"].includes(status)) throw new Error("Each RSVP needs a tournament and valid status.");
+    if (!email || !name) throw new Error("Each RSVP needs a name and email.");
+    const tournament = tournaments.find((item) => item.id === tournamentId);
+    if (!tournament) throw new Error(`Tournament not found: ${tournamentId}.`);
+    const next = {
+      id: String(entry.id || crypto.randomUUID()),
+      tournamentId,
+      tournamentTitle: tournament.title,
+      eventDate: tournament.eventDate,
+      status,
+      email,
+      name,
+      updatedAt: String(entry.updatedAt || now),
+      source: String(entry.source || "Committee maintenance"),
+    };
+    const index = all.findIndex((item) => item.email === email && item.tournamentId === tournamentId);
+    if (index >= 0) {
+      all[index] = { ...all[index], ...next, id: all[index].id || next.id };
+    } else {
+      all.unshift(next);
+    }
+    updated.push(next);
+  });
+  writeJsonFile(rsvpsFile(), all);
+  return { updated, attendeeSummary: publicRsvpSummary(all) };
+}
+
 function emailOutboxFile() {
   return dataPath("private", "email-outbox.local.json");
 }
@@ -1151,6 +1189,22 @@ async function handleApi(req, res, url) {
         ok: true,
         written: writeBootstrapPayload(payload, { allowed, allowedPublic: new Set(["committee.json", "home.json"]), preserveUserAuth: true }),
       });
+    } catch (error) {
+      return sendJson(res, 400, { ok: false, message: error.message });
+    }
+  }
+
+  if (url.pathname === "/api/rangers-rick/tournament-rsvps" && req.method === "POST") {
+    if (!rangersRickAuthorized(req, url)) return sendJson(res, 404, { ok: false, message: "Not found." });
+    const body = await readBody(req, 1_000_000);
+    let payload = {};
+    try {
+      payload = JSON.parse(body || "{}");
+    } catch {
+      return sendJson(res, 400, { ok: false, message: "Invalid RSVP maintenance request." });
+    }
+    try {
+      return sendJson(res, 200, { ok: true, ...upsertTournamentRsvps(payload.rsvps) });
     } catch (error) {
       return sendJson(res, 400, { ok: false, message: error.message });
     }
