@@ -1,30 +1,69 @@
 {
-  "currentUpdate": "TODAY'S GOLF IS CANCELLED",
+  "currentUpdate": "September 16 results are posted",
   "weeklyPrizeWinners": {
-    "label": "September 2",
+    "label": "September 16",
     "twos": [
-      "James McGowan",
-      "Doug Lawrence",
-      "Dave Lees",
-      "Mike Beckman",
-      "Steve Murphy"
+      "John Chesham",
+      "Fred Kryzanowski",
+      "David Lees"
     ],
     "closestToPin": [
       {
         "hole": 4,
-        "name": "Bernie Jones",
-        "source": "President Pete workbook"
+        "name": "Ron Valente",
+        "source": "September 16 audited handoff"
       },
       {
         "hole": 7,
-        "name": "Gary Dyck",
-        "source": "President Pete workbook"
+        "name": "John Chesham",
+        "source": "September 16 audited handoff"
+      }
+    ],
+    "sweeps": [
+      {
+        "flight": "A",
+        "places": [
+          {
+            "place": "1st",
+            "names": [
+              "James McGowan",
+              "Martin Earley",
+              "Josh Falovo",
+              "Kevin Coons"
+            ],
+            "points": 19
+          }
+        ]
+      },
+      {
+        "flight": "B",
+        "places": [
+          {
+            "place": "1st",
+            "names": [
+              "Mark Peat"
+            ],
+            "points": 22
+          }
+        ]
+      },
+      {
+        "flight": "C",
+        "places": [
+          {
+            "place": "1st",
+            "names": [
+              "Jason Santry"
+            ],
+            "points": 22
+          }
+        ]
       }
     ]
   },
   "weeklyNews": {
-    "headline": "September 2 Prize Winners",
-    "body": "Twos, closest-to-pin winners, weekly scores, match results, handicap changes, and updated standings are available after member login."
+    "headline": "September 16 Results Posted",
+    "body": "September 16 scores, standings, match results, handicap changes, twos, and closest-to-pin winners are available after member login."
   },
   "memorial": {
     "title": "Peter McBride Memorial",
@@ -33,15 +72,15 @@
     "closing": "RIP Big Chum."
   },
   "atAGlance": {
-    "nextLeagueNight": "September 9",
+    "nextLeagueNight": "September 23",
     "courseUpdate": [
-      "TODAY'S GOLF IS CANCELLED.",
-      "Cancelled due to rain and lightning in the area.",
+      "September 16 results are posted.",
+      "September 9 was a rainout.",
       "Check in before your tee time.",
       "Make sure your matches are complete."
     ],
     "matchRoundLabel": "Round 4 Matches",
     "matchRoundDue": "Complete as soon as possible",
-    "nextTournament": "Whisky Run · September 19"
+    "nextTournament": "Whisky Run \u00b7 September 19"
   }
 }

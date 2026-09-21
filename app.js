@@ -262,8 +262,31 @@ function renderHome() {
   const twos = home.weeklyPrizeWinners.twos.length
     ? home.weeklyPrizeWinners.twos.map((name) => `<li>Two: ${escapeHtml(name)}</li>`).join("")
     : "<li>No twos posted.</li>";
-  const sweeps = Array.isArray(home.weeklyPrizeWinners.sweeps) && home.weeklyPrizeWinners.sweeps.length
-    ? home.weeklyPrizeWinners.sweeps.map((flight) => `
+  const sweepsRows = Array.isArray(home.weeklyPrizeWinners.sweeps)
+    ? home.weeklyPrizeWinners.sweeps
+        .map((flight) => {
+          const places = Array.isArray(flight.places)
+            ? flight.places.map((place) => ({
+                ...place,
+                names: Array.isArray(place.names) ? place.names : [],
+              }))
+            : [];
+          if (places.length) return { ...flight, places };
+          if (flight.name) {
+            return {
+              ...flight,
+              places: [{
+                place: "1st",
+                names: String(flight.name).split("/").map((name) => name.trim()).filter(Boolean),
+              }],
+            };
+          }
+          return null;
+        })
+        .filter(Boolean)
+    : [];
+  const sweeps = sweepsRows.length
+    ? sweepsRows.map((flight) => `
       <li>
         <strong>${escapeHtml(flight.flight)} Division</strong>
         ${flight.places.map((place) => `
