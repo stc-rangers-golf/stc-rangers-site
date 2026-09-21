@@ -18,47 +18,6 @@
         "name": "John Chesham",
         "source": "September 16 audited handoff"
       }
-    ],
-    "sweeps": [
-      {
-        "flight": "A",
-        "places": [
-          {
-            "place": "1st",
-            "names": [
-              "James McGowan",
-              "Martin Earley",
-              "Josh Falovo",
-              "Kevin Coons"
-            ],
-            "points": 19
-          }
-        ]
-      },
-      {
-        "flight": "B",
-        "places": [
-          {
-            "place": "1st",
-            "names": [
-              "Mark Peat"
-            ],
-            "points": 22
-          }
-        ]
-      },
-      {
-        "flight": "C",
-        "places": [
-          {
-            "place": "1st",
-            "names": [
-              "Jason Santry"
-            ],
-            "points": 22
-          }
-        ]
-      }
     ]
   },
   "weeklyNews": {
