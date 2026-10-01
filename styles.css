@@ -190,6 +190,123 @@ a {
   text-shadow: none;
 }
 
+.division-champions {
+  margin: 38px auto 0;
+  max-width: 1040px;
+  text-align: left;
+  text-shadow: none;
+}
+
+.division-champions-head {
+  margin-bottom: 14px;
+  color: white;
+  text-align: center;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.32);
+}
+
+.division-champions-head span {
+  display: block;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 0.78rem;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.division-champions-head h2 {
+  margin: 4px 0 0;
+  font-size: clamp(2rem, 3.5vw, 4rem);
+  line-height: 1;
+}
+
+.division-champion-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.division-champion-card {
+  min-height: 390px;
+  overflow: hidden;
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: var(--shadow);
+}
+
+.division-champion-photo {
+  position: relative;
+  height: 238px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--blue-900), #4f638f);
+  color: white;
+}
+
+.division-champion-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.division-champion-photo span {
+  display: grid;
+  place-items: center;
+  width: 118px;
+  height: 118px;
+  border-radius: 999px;
+  border: 5px solid rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.16);
+  font-size: 2.8rem;
+  font-weight: 950;
+}
+
+.division-champion-photo.is-placeholder::after {
+  content: "Photo spot ready";
+  position: absolute;
+  bottom: 20px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.division-champion-copy {
+  padding: 18px;
+}
+
+.division-champion-copy > span {
+  display: block;
+  color: var(--red-700);
+  font-size: 0.78rem;
+  font-weight: 950;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.division-champion-copy h3 {
+  margin: 8px 0;
+  color: var(--blue-900);
+  font-size: clamp(1.25rem, 2vw, 1.7rem);
+  line-height: 1.08;
+}
+
+.division-champion-copy p {
+  margin: 0;
+  color: #4f5e78;
+  font-weight: 900;
+}
+
+.division-champion-copy small {
+  display: block;
+  margin-top: 10px;
+  color: #6a7488;
+  font-weight: 800;
+}
+
 .glass-panel,
 .memorial-card,
 .panel,
@@ -1282,6 +1399,7 @@ a {
 
   .hero,
   .home-panels,
+  .division-champion-grid,
   .rant-layout,
   .tournament-grid,
   .profile-layout,

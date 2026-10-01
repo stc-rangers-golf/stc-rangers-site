@@ -313,6 +313,7 @@ function renderHome() {
       `;
     })
     .join("");
+  const divisionChampions = renderDivisionChampions(home.divisionChampions || []);
 
   view.innerHTML = html`
     <section class="hero">
@@ -331,6 +332,7 @@ function renderHome() {
           `).join("")}
         </div>
         ${state.authed ? renderMemberSnapshot() : ""}
+        ${divisionChampions}
         <div class="home-panels">
           <article class="glass-panel">
             <h2 class="panel-title">Weekly Prize Winners</h2>
@@ -367,6 +369,37 @@ function renderHome() {
           <strong>${escapeHtml(home.memorial.closing)}</strong>
         </div>
       </aside>
+    </section>
+  `;
+}
+
+function renderDivisionChampions(champions) {
+  if (!Array.isArray(champions) || !champions.length) return "";
+  return html`
+    <section class="division-champions" aria-label="Final division champions">
+      <div class="division-champions-head">
+        <span>Final Standings</span>
+        <h2>2026 Division Champions</h2>
+      </div>
+      <div class="division-champion-grid">
+        ${champions.map((champion) => {
+          const photoDataUrl = champion.photoDataUrl || findMemberPhoto(champion.name);
+          const photo = photoDataUrl
+            ? `<img src="${escapeHtml(photoDataUrl)}" alt="${escapeHtml(champion.name)} division champion" />`
+            : `<span>${escapeHtml(getInitials(champion.name))}</span>`;
+          return `
+            <article class="division-champion-card">
+              <div class="division-champion-photo ${photoDataUrl ? "" : "is-placeholder"}">${photo}</div>
+              <div class="division-champion-copy">
+                <span>${escapeHtml(champion.flight)} Division Winner</span>
+                <h3>Congratulations to ${escapeHtml(champion.name)}</h3>
+                <p>${escapeHtml(champion.points)} points</p>
+                ${photoDataUrl ? "" : `<small>Photo spot ready for upload</small>`}
+              </div>
+            </article>
+          `;
+        }).join("")}
+      </div>
     </section>
   `;
 }

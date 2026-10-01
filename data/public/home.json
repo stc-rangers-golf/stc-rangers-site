@@ -1,28 +1,84 @@
 {
-  "currentUpdate": "September 16 results are posted",
+  "currentUpdate": "Final September 30 results are posted.",
   "weeklyPrizeWinners": {
-    "label": "September 16",
+    "label": "September 30",
     "twos": [
-      "John Chesham",
-      "Fred Kryzanowski",
-      "David Lees"
+      "Randy Coughler (Hole 7)",
+      "Doug Currie (Hole 4)",
+      "Shane Secord (Hole 4)",
+      "Derek Galipeau (Hole 4)"
     ],
     "closestToPin": [
       {
         "hole": 4,
-        "name": "Ron Valente",
-        "source": "September 16 audited handoff"
+        "name": "Derek Galipeau",
+        "source": "September 30 audited final handoff"
       },
       {
         "hole": 7,
-        "name": "John Chesham",
-        "source": "September 16 audited handoff"
+        "name": "Randy Coughler",
+        "source": "September 30 audited final handoff"
+      }
+    ],
+    "sweeps": [
+      {
+        "flight": "A",
+        "places": [
+          {
+            "place": "1st",
+            "names": [
+              "John O'Connor (21)"
+            ]
+          },
+          {
+            "place": "2nd",
+            "names": [
+              "Gary McGuchan (19)"
+            ]
+          }
+        ]
+      },
+      {
+        "flight": "B",
+        "places": [
+          {
+            "place": "1st",
+            "names": [
+              "Shane Secord (22)"
+            ]
+          },
+          {
+            "place": "2nd",
+            "names": [
+              "Dennis Larocque (20)",
+              "Mike McBride (20)",
+              "Paul Williams (20)"
+            ]
+          }
+        ]
+      },
+      {
+        "flight": "C",
+        "places": [
+          {
+            "place": "1st",
+            "names": [
+              "Derek Galipeau (26)"
+            ]
+          },
+          {
+            "place": "2nd",
+            "names": [
+              "Campbell Andrews (24)"
+            ]
+          }
+        ]
       }
     ]
   },
   "weeklyNews": {
-    "headline": "September 16 Results Posted",
-    "body": "September 16 scores, standings, match results, handicap changes, twos, and closest-to-pin winners are available after member login."
+    "headline": "Final September 30 Results Posted",
+    "body": "Final standings, September 30 scores, handicap changes, twos, closest-to-pin winners, and sweeps results are available after member login."
   },
   "memorial": {
     "title": "Peter McBride Memorial",
@@ -31,15 +87,32 @@
     "closing": "RIP Big Chum."
   },
   "atAGlance": {
-    "nextLeagueNight": "September 23",
+    "nextLeagueNight": "2026 season complete",
     "courseUpdate": [
-      "September 16 results are posted.",
-      "September 9 was a rainout.",
-      "Check in before your tee time.",
-      "Make sure your matches are complete."
+      "Final September 30 league results are posted.",
+      "Standings use each golfer's best 17 played-week point totals.",
+      "All score histories remain available after member login.",
+      "No September 30 matches were entered."
     ],
     "matchRoundLabel": "Round 4 Matches",
     "matchRoundDue": "Complete as soon as possible",
     "nextTournament": "Whisky Run \u00b7 September 19"
-  }
+  },
+  "divisionChampions": [
+    {
+      "flight": "A",
+      "name": "Casey Jarzabek",
+      "points": 312
+    },
+    {
+      "flight": "B",
+      "name": "Pete Strang",
+      "points": 307
+    },
+    {
+      "flight": "C",
+      "name": "Derek Galipeau",
+      "points": 307
+    }
+  ]
 }
