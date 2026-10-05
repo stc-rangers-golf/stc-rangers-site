@@ -2,7 +2,10 @@
 
 ## Current Safe State
 
-- GoDaddy is the target live host for `stcrangers.ca`.
+- Render is the target live host for `stcrangers.ca`.
+- Render service: `stc-rangers-site` (`srv-d8vmne6gvqtc738mf3tg`).
+- GoDaddy is domain/DNS/account management only unless Casey explicitly confirms a host migration.
+- Do not upload, publish, or deploy Rangers website code through GoDaddy hosting.
 - The standalone Node build is ready in this folder.
 - Private member data is not served directly from `/data/private`.
 - Private API routes return `401` unless logged in.
@@ -55,8 +58,8 @@ Use `.env.example` as the starting point.
 - Committee page displays uploaded profile photo for committee members
 - Logout returns user to public state
 
-## DNS Cutover Shape
+## DNS / Deployment Shape
 
-- Keep a zipped backup of the standalone build and exported private data before every GoDaddy upload.
+- Make website/data updates through Render and the protected Rangers bootstrap workflow.
 - Deploy code updates without overwriting live `.local.json` files for users, reset tokens, profile photos, RSVP data, and email outbox.
-- Verify `stcrangers.ca` after every publish because it is now the live member URL.
+- Verify `https://stc-rangers-site.onrender.com` and `stcrangers.ca` after every publish because `stcrangers.ca` is the live member URL.
