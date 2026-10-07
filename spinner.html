@@ -303,6 +303,62 @@
       flex-wrap: wrap;
     }
 
+    .hidden {
+      display: none !important;
+    }
+
+    .mode-panel {
+      margin-bottom: 14px;
+      padding: 14px;
+      border: 1px solid #d9e3ee;
+      border-left: 6px solid var(--red);
+      border-radius: 8px;
+      background: #f8fbff;
+    }
+
+    .mode-panel label,
+    .mode-panel strong,
+    .mode-panel span {
+      display: block;
+    }
+
+    .mode-panel label {
+      color: var(--blue);
+      font-size: 14px;
+      font-weight: 900;
+      text-transform: uppercase;
+      margin-bottom: 7px;
+    }
+
+    .mode-panel input {
+      width: 100%;
+      min-height: 48px;
+      border: 1px solid #cdd7e8;
+      border-radius: 8px;
+      padding: 0 12px;
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .mode-panel p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .prize-callout {
+      margin: 0 0 12px;
+      padding: 11px 13px;
+      border-radius: 8px;
+      background: #fff7e0;
+      border: 1px solid #f1d68a;
+      color: #745200;
+      font-weight: 900;
+      line-height: 1.25;
+    }
+
     .winner-chip {
       border-radius: 999px;
       padding: 7px 10px;
@@ -353,6 +409,8 @@
 
     <section class="layout">
       <div class="wheel-panel">
+        <div class="mode-panel hidden" id="modePanel"></div>
+        <div class="prize-callout hidden" id="prizeCallout"></div>
         <div class="wheel-wrap">
           <div class="pointer" aria-hidden="true"></div>
           <canvas id="wheel" width="1200" height="1200" aria-label="Weighted spinner wheel"></canvas>
@@ -489,6 +547,13 @@
     const names = document.getElementById("names");
     const search = document.getElementById("search");
     const history = document.getElementById("history");
+    const modePanel = document.getElementById("modePanel");
+    const prizeCallout = document.getElementById("prizeCallout");
+    const params = new URLSearchParams(window.location.search);
+    const isControl = params.has("control");
+    const isLive = params.has("live");
+    const controlKey = params.get("key") || "";
+    let latestSpinId = "";
 
     const totalEntries = golfers.reduce((sum, golfer) => sum + golfer.rounds, 0);
     document.getElementById("playerCount").textContent = golfers.length;
@@ -517,6 +582,15 @@
 
     function percent(golfer) {
       return ((golfer.rounds / totalEntries) * 100).toFixed(2);
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
     }
 
     function drawWheel() {
@@ -577,27 +651,61 @@
       return wheel.find(slice => position >= slice.start && position < slice.end) || wheel[0];
     }
 
-    function setResult(golfer) {
+    function setPrize(prize) {
+      const cleanPrize = String(prize || "").trim();
+      if (!cleanPrize) {
+        prizeCallout.classList.add("hidden");
+        prizeCallout.textContent = "";
+        return;
+      }
+      prizeCallout.textContent = `Now drawing for: ${cleanPrize}`;
+      prizeCallout.classList.remove("hidden");
+    }
+
+    function setResult(golfer, prize = "") {
+      setPrize(prize);
       result.innerHTML = `
         <div class="badge">${initials(golfer.name)}</div>
         <div>
           <strong>${golfer.name}</strong>
-          <span>${golfer.flight} Flight | ${golfer.rounds} entries | ${percent(golfer)}% chance</span>
+          <span>${golfer.flight} Flight | ${golfer.rounds} entries | ${percent(golfer)}% chance${prize ? ` | ${escapeHtml(prize)}` : ""}</span>
         </div>
       `;
     }
 
-    function spin() {
+    function weightedPick() {
+      let ticket = Math.floor(Math.random() * totalEntries);
+      for (const golfer of golfers) {
+        ticket -= golfer.rounds;
+        if (ticket < 0) return golfer;
+      }
+      return golfers[golfers.length - 1];
+    }
+
+    function findGolferByName(name) {
+      return golfers.find(golfer => golfer.name === name) || null;
+    }
+
+    function targetRotationForGolfer(golfer, turns) {
+      const slice = wheel.find(item => item.name === golfer.name) || wheel[0];
+      const midpoint = ((slice.start + slice.end) / 2) * Math.PI * 2;
+      const desiredRotation = ((Math.PI * 1.5 - midpoint) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+      const currentRotation = ((rotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+      const delta = (desiredRotation - currentRotation + Math.PI * 2) % (Math.PI * 2);
+      return rotation + turns * Math.PI * 2 + delta;
+    }
+
+    function spinToGolfer(golfer, prize = "", spinId = "") {
       if (spinning) return;
       spinning = true;
       spinButton.disabled = true;
 
-      const extraTurns = 6 + Math.random() * 4;
-      const randomStop = Math.random() * Math.PI * 2;
       const startRotation = rotation;
-      const targetRotation = startRotation + extraTurns * Math.PI * 2 + randomStop;
+      const targetRotation = targetRotationForGolfer(golfer, 7 + Math.floor(Math.random() * 3));
       const duration = 5200;
       const started = performance.now();
+      if (spinId) latestSpinId = spinId;
+      setPrize(prize);
 
       function frame(now) {
         const elapsed = now - started;
@@ -612,20 +720,55 @@
         }
 
         rotation = ((rotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-        const winner = golferAtPointer();
-        setResult(winner);
-        addHistory(winner);
+        setResult(golfer, prize);
+        addHistory(golfer, prize);
         spinning = false;
-        spinButton.disabled = false;
+        if (!isLive) spinButton.disabled = false;
       }
 
       requestAnimationFrame(frame);
     }
 
-    function addHistory(golfer) {
+    async function publishSpin(winner, prize, spinId) {
+      if (!isControl) return;
+      const response = await fetch("/api/spinner/spin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Spinner-Key": controlKey,
+        },
+        body: JSON.stringify({ winner, prize, spinId }),
+      });
+      if (!response.ok) throw new Error("Live spin request failed.");
+    }
+
+    async function spin() {
+      if (spinning || isLive) return;
+      const winner = weightedPick();
+      const prizeInput = document.getElementById("prizeInput");
+      const prize = prizeInput ? prizeInput.value.trim() : "";
+      const spinId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      if (isControl) {
+        try {
+          await publishSpin(winner, prize, spinId);
+        } catch {
+          result.innerHTML = `
+            <div class="badge">!</div>
+            <div>
+              <strong>Could not send live spin</strong>
+              <span>Check the controller link and internet connection.</span>
+            </div>
+          `;
+          return;
+        }
+      }
+      spinToGolfer(winner, prize, spinId);
+    }
+
+    function addHistory(golfer, prize = "") {
       const chip = document.createElement("span");
       chip.className = "winner-chip";
-      chip.textContent = `${golfer.name} (${golfer.rounds})`;
+      chip.textContent = `${prize ? `${prize}: ` : ""}${golfer.name} (${golfer.rounds})`;
       history.prepend(chip);
       while (history.children.length > 8) history.removeChild(history.lastChild);
     }
@@ -649,6 +792,69 @@
         });
     }
 
+    function configureMode() {
+      if (isControl) {
+        document.title = "Spinner Control | STC Rangers";
+        document.querySelector("h1").textContent = "Spinner Control";
+        document.querySelector("header p").textContent = "Type or dictate the prize name, then spin. The live display page will update for everyone in the room.";
+        modePanel.innerHTML = `
+          <label for="prizeInput">Prize name</label>
+          <input id="prizeInput" type="text" autocomplete="off" placeholder="Tap here and use your phone mic">
+          <p>Use your phone keyboard microphone here for voice dictation, then tap Spin Live Wheel.</p>
+        `;
+        modePanel.classList.remove("hidden");
+        spinButton.textContent = "Spin Live Wheel";
+        return;
+      }
+
+      if (isLive) {
+        document.title = "Live Spinner | STC Rangers";
+        document.querySelector("h1").textContent = "Live Spinner";
+        document.querySelector("header p").textContent = "Waiting for Casey's phone controller. Leave this page open on the banquet screen.";
+        modePanel.innerHTML = `<strong>Live display mode</strong><p>When the phone controller spins, this screen will animate and show the winner.</p>`;
+        modePanel.classList.remove("hidden");
+        spinButton.classList.add("hidden");
+        spinButton.disabled = true;
+        connectLiveDisplay();
+      }
+    }
+
+    async function applyRemoteState(state) {
+      if (!state || !state.winner || !state.spinId || state.spinId === latestSpinId) return;
+      const golfer = findGolferByName(state.winner.name);
+      if (!golfer) return;
+      spinToGolfer(golfer, state.prize || "", state.spinId);
+    }
+
+    async function connectLiveDisplay() {
+      try {
+        const response = await fetch("/api/spinner/state", { cache: "no-store" });
+        const payload = await response.json();
+        await applyRemoteState(payload.state);
+      } catch {
+        // The EventSource connection below will keep trying.
+      }
+
+      const events = new EventSource("/api/spinner/events");
+      events.onmessage = (event) => {
+        try {
+          applyRemoteState(JSON.parse(event.data));
+        } catch {
+          // Ignore malformed event payloads.
+        }
+      };
+      events.onerror = () => {
+        result.innerHTML = `
+          <div class="badge">...</div>
+          <div>
+            <strong>Reconnecting</strong>
+            <span>Waiting for the live spinner connection.</span>
+          </div>
+        `;
+      };
+    }
+
+    configureMode();
     spinButton.addEventListener("click", spin);
     search.addEventListener("input", renderNames);
     drawWheel();

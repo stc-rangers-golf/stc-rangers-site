@@ -1148,7 +1148,86 @@ function phoneDigitsClose(expected, submitted) {
   return differences === 1;
 }
 
+const spinnerClients = new Set();
+let spinnerState = {
+  spinId: "",
+  prize: "",
+  winner: null,
+  startedAt: "",
+  duration: 5200,
+};
+
+function spinnerControlAuthorized(req, url) {
+  const configured = process.env.STC_SPINNER_CONTROL_KEY || "rangers-banquet-2026";
+  const supplied = url.searchParams.get("key") || req.headers["x-spinner-key"] || "";
+  const expected = Buffer.from(String(configured));
+  const actual = Buffer.from(String(supplied));
+  return Boolean(configured && supplied && expected.length === actual.length && crypto.timingSafeEqual(expected, actual));
+}
+
+function cleanSpinnerText(value, maxLength = 120) {
+  return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
+}
+
+function broadcastSpinnerState() {
+  const payload = `data: ${JSON.stringify(spinnerState)}\n\n`;
+  spinnerClients.forEach((client) => {
+    try {
+      client.write(payload);
+    } catch {
+      spinnerClients.delete(client);
+    }
+  });
+}
+
 async function handleApi(req, res, url) {
+  if (url.pathname === "/api/spinner/state" && req.method === "GET") {
+    return sendJson(res, 200, { ok: true, state: spinnerState });
+  }
+
+  if (url.pathname === "/api/spinner/events" && req.method === "GET") {
+    res.writeHead(200, {
+      "Content-Type": "text/event-stream; charset=utf-8",
+      "Cache-Control": "no-store",
+      Connection: "keep-alive",
+    });
+    res.write(`data: ${JSON.stringify(spinnerState)}\n\n`);
+    const keepAlive = setInterval(() => res.write(": keep-alive\n\n"), 25000);
+    spinnerClients.add(res);
+    req.on("close", () => {
+      clearInterval(keepAlive);
+      spinnerClients.delete(res);
+    });
+    return;
+  }
+
+  if (url.pathname === "/api/spinner/spin" && req.method === "POST") {
+    if (!spinnerControlAuthorized(req, url)) return sendJson(res, 404, { ok: false, message: "Not found." });
+    const body = await readBody(req, 50_000);
+    let payload = {};
+    try {
+      payload = JSON.parse(body || "{}");
+    } catch {
+      return sendJson(res, 400, { ok: false, message: "Invalid spinner request." });
+    }
+    const winner = payload.winner && typeof payload.winner === "object" ? payload.winner : null;
+    const name = cleanSpinnerText(winner && winner.name, 80);
+    if (!name) return sendJson(res, 400, { ok: false, message: "Winner is required." });
+    spinnerState = {
+      spinId: cleanSpinnerText(payload.spinId, 80) || crypto.randomUUID(),
+      prize: cleanSpinnerText(payload.prize, 120),
+      winner: {
+        name,
+        flight: cleanSpinnerText(winner.flight, 4),
+        rounds: Number(winner.rounds || 0),
+      },
+      startedAt: new Date().toISOString(),
+      duration: 5200,
+    };
+    broadcastSpinnerState();
+    return sendJson(res, 200, { ok: true, state: spinnerState });
+  }
+
   if (url.pathname === "/api/codex-bootstrap-data" && req.method === "POST") {
     const secret = process.env.STC_BOOTSTRAP_SECRET || "";
     if (!secret || url.searchParams.get("key") !== secret) {
