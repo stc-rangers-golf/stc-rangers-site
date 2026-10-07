@@ -348,6 +348,24 @@
       line-height: 1.35;
     }
 
+    .mode-actions {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .secondary-action {
+      min-height: 44px;
+      border: 1px solid #cdd7e8;
+      border-radius: 8px;
+      background: #fff;
+      color: var(--blue);
+      font: inherit;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
     .prize-callout {
       margin: 0 0 12px;
       padding: 11px 13px;
@@ -742,6 +760,24 @@
       if (!response.ok) throw new Error("Live spin request failed.");
     }
 
+    async function clearLiveDisplay() {
+      if (!isControl) return;
+      const response = await fetch("/api/spinner/reset", {
+        method: "POST",
+        headers: { "X-Spinner-Key": controlKey },
+      });
+      if (!response.ok) return;
+      prizeCallout.classList.add("hidden");
+      result.innerHTML = `
+        <div class="badge">STC</div>
+        <div>
+          <strong>Ready to spin</strong>
+          <span>Odds are weighted by official rounds played.</span>
+        </div>
+      `;
+      history.innerHTML = "";
+    }
+
     async function spin() {
       if (spinning || isLive) return;
       const winner = weightedPick();
@@ -801,9 +837,13 @@
           <label for="prizeInput">Prize name</label>
           <input id="prizeInput" type="text" autocomplete="off" placeholder="Tap here and use your phone mic">
           <p>Use your phone keyboard microphone here for voice dictation, then tap Spin Live Wheel.</p>
+          <div class="mode-actions">
+            <button class="secondary-action" id="clearDisplayButton" type="button">Clear Display</button>
+          </div>
         `;
         modePanel.classList.remove("hidden");
         spinButton.textContent = "Spin Live Wheel";
+        modePanel.querySelector("#clearDisplayButton").addEventListener("click", clearLiveDisplay);
         return;
       }
 

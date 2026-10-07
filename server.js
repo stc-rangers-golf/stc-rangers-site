@@ -1228,6 +1228,19 @@ async function handleApi(req, res, url) {
     return sendJson(res, 200, { ok: true, state: spinnerState });
   }
 
+  if (url.pathname === "/api/spinner/reset" && req.method === "POST") {
+    if (!spinnerControlAuthorized(req, url)) return sendJson(res, 404, { ok: false, message: "Not found." });
+    spinnerState = {
+      spinId: "",
+      prize: "",
+      winner: null,
+      startedAt: "",
+      duration: 5200,
+    };
+    broadcastSpinnerState();
+    return sendJson(res, 200, { ok: true, state: spinnerState });
+  }
+
   if (url.pathname === "/api/codex-bootstrap-data" && req.method === "POST") {
     const secret = process.env.STC_BOOTSTRAP_SECRET || "";
     if (!secret || url.searchParams.get("key") !== secret) {
