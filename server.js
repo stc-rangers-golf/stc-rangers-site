@@ -1149,13 +1149,47 @@ function phoneDigitsClose(expected, submitted) {
 }
 
 const spinnerClients = new Set();
-let spinnerState = {
+
+function defaultSpinnerState() {
+  return {
+    spinId: "",
+    prize: "",
+    winner: null,
+    startedAt: "",
+    duration: 5200,
+    history: [],
+  };
+}
+
+function spinnerStateFile() {
+  return dataPath("private", "spinner-state.local.json");
+}
+
+function loadSpinnerState() {
+  const saved = readJsonFile(spinnerStateFile(), defaultSpinnerState());
+  return {
+    ...defaultSpinnerState(),
+    ...(saved && typeof saved === "object" ? saved : {}),
+    history: Array.isArray(saved && saved.history) ? saved.history.slice(0, 100) : [],
+  };
+}
+
+function saveSpinnerState() {
+  writeJsonFile(spinnerStateFile(), spinnerState);
+}
+
+let spinnerState = loadSpinnerState();
+
+function emptySpinnerState() {
+  return {
   spinId: "",
   prize: "",
   winner: null,
   startedAt: "",
   duration: 5200,
-};
+  history: [],
+  };
+}
 
 function spinnerControlAuthorized(req, url) {
   const configured = process.env.STC_SPINNER_CONTROL_KEY || "rangers-banquet-2026";
@@ -1167,6 +1201,17 @@ function spinnerControlAuthorized(req, url) {
 
 function cleanSpinnerText(value, maxLength = 120) {
   return String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength);
+}
+
+function cleanSpinnerWinner(winner) {
+  const candidate = winner && typeof winner === "object" ? winner : null;
+  const name = cleanSpinnerText(candidate && candidate.name, 80);
+  if (!name) return null;
+  return {
+    name,
+    flight: cleanSpinnerText(candidate.flight, 4),
+    rounds: Number(candidate.rounds || 0),
+  };
 }
 
 function broadcastSpinnerState() {
@@ -1210,33 +1255,29 @@ async function handleApi(req, res, url) {
     } catch {
       return sendJson(res, 400, { ok: false, message: "Invalid spinner request." });
     }
-    const winner = payload.winner && typeof payload.winner === "object" ? payload.winner : null;
-    const name = cleanSpinnerText(winner && winner.name, 80);
-    if (!name) return sendJson(res, 400, { ok: false, message: "Winner is required." });
+    const winner = cleanSpinnerWinner(payload.winner);
+    if (!winner) return sendJson(res, 400, { ok: false, message: "Winner is required." });
+    const spinId = cleanSpinnerText(payload.spinId, 80) || crypto.randomUUID();
+    const prize = cleanSpinnerText(payload.prize, 120);
+    const startedAt = new Date().toISOString();
+    const historyEntry = { spinId, prize, winner, startedAt };
     spinnerState = {
-      spinId: cleanSpinnerText(payload.spinId, 80) || crypto.randomUUID(),
-      prize: cleanSpinnerText(payload.prize, 120),
-      winner: {
-        name,
-        flight: cleanSpinnerText(winner.flight, 4),
-        rounds: Number(winner.rounds || 0),
-      },
-      startedAt: new Date().toISOString(),
+      spinId,
+      prize,
+      winner,
+      startedAt,
       duration: 5200,
+      history: [historyEntry, ...(spinnerState.history || [])].slice(0, 100),
     };
+    saveSpinnerState();
     broadcastSpinnerState();
     return sendJson(res, 200, { ok: true, state: spinnerState });
   }
 
   if (url.pathname === "/api/spinner/reset" && req.method === "POST") {
     if (!spinnerControlAuthorized(req, url)) return sendJson(res, 404, { ok: false, message: "Not found." });
-    spinnerState = {
-      spinId: "",
-      prize: "",
-      winner: null,
-      startedAt: "",
-      duration: 5200,
-    };
+    spinnerState = emptySpinnerState();
+    saveSpinnerState();
     broadcastSpinnerState();
     return sendJson(res, 200, { ok: true, state: spinnerState });
   }

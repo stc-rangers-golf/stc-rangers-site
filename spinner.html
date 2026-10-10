@@ -298,9 +298,8 @@
 
     .history {
       margin-top: 12px;
-      display: flex;
+      display: grid;
       gap: 8px;
-      flex-wrap: wrap;
     }
 
     .hidden {
@@ -377,14 +376,34 @@
       line-height: 1.25;
     }
 
+    .history-empty,
     .winner-chip {
-      border-radius: 999px;
-      padding: 7px 10px;
+      border-radius: 8px;
+      padding: 9px 10px;
       background: #edf8f2;
       color: var(--green);
       border: 1px solid #ccebd9;
       font-size: 13px;
       font-weight: 900;
+    }
+
+    .history-empty {
+      background: #f8fbff;
+      border-color: #d9e3ee;
+      color: var(--muted);
+    }
+
+    .winner-chip {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .winner-chip span {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: right;
     }
 
     @media (max-width: 900px) {
@@ -739,10 +758,9 @@
 
         rotation = ((rotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
         setResult(golfer, prize);
-        addHistory(golfer, prize);
-        spinning = false;
-        if (!isLive) spinButton.disabled = false;
-      }
+      spinning = false;
+      if (!isLive) spinButton.disabled = false;
+    }
 
       requestAnimationFrame(frame);
     }
@@ -758,6 +776,7 @@
         body: JSON.stringify({ winner, prize, spinId }),
       });
       if (!response.ok) throw new Error("Live spin request failed.");
+      return response.json();
     }
 
     async function clearLiveDisplay() {
@@ -776,6 +795,7 @@
         </div>
       `;
       history.innerHTML = "";
+      renderHistory([]);
     }
 
     async function spin() {
@@ -786,7 +806,10 @@
       const spinId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
       if (isControl) {
         try {
-          await publishSpin(winner, prize, spinId);
+          const payload = await publishSpin(winner, prize, spinId);
+          if (payload && payload.state && Array.isArray(payload.state.history)) {
+            renderHistory(payload.state.history);
+          }
         } catch {
           result.innerHTML = `
             <div class="badge">!</div>
@@ -801,10 +824,50 @@
       spinToGolfer(winner, prize, spinId);
     }
 
+    function formatHistoryTime(value) {
+      if (!value) return "";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "";
+      return date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    }
+
+    function renderHistory(entries = []) {
+      const rows = Array.isArray(entries) ? entries : [];
+      history.innerHTML = "";
+      if (!rows.length) {
+        const empty = document.createElement("div");
+        empty.className = "history-empty";
+        empty.textContent = "Draw winners will be saved here as prizes are spun.";
+        history.appendChild(empty);
+        return;
+      }
+      rows.forEach((entry, index) => {
+        const golfer = entry.winner || {};
+        const chip = document.createElement("div");
+        const prize = String(entry.prize || "").trim();
+        const time = formatHistoryTime(entry.startedAt);
+        const prizeLabel = prize || `Draw ${rows.length - index}`;
+        const details = [
+          golfer.flight ? `${golfer.flight} Flight` : "",
+          golfer.rounds ? `${golfer.rounds} entries` : "",
+          time,
+        ].filter(Boolean).join(" | ");
+        chip.className = "winner-chip";
+        chip.innerHTML = `
+          <strong>${escapeHtml(prizeLabel)}: ${escapeHtml(golfer.name || "Winner")}</strong>
+          <span>${escapeHtml(details)}</span>
+        `;
+        history.appendChild(chip);
+      });
+    }
+
     function addHistory(golfer, prize = "") {
-      const chip = document.createElement("span");
+      const chip = document.createElement("div");
       chip.className = "winner-chip";
-      chip.textContent = `${prize ? `${prize}: ` : ""}${golfer.name} (${golfer.rounds})`;
+      chip.innerHTML = `
+        <strong>${escapeHtml(prize ? `${prize}: ` : "")}${escapeHtml(golfer.name)}</strong>
+        <span>${escapeHtml(`${golfer.flight} Flight | ${golfer.rounds} entries`)}</span>
+      `;
       history.prepend(chip);
       while (history.children.length > 8) history.removeChild(history.lastChild);
     }
@@ -860,6 +923,7 @@
     }
 
     async function applyRemoteState(state) {
+      if (state && Array.isArray(state.history)) renderHistory(state.history);
       if (!state || !state.winner || !state.spinId || state.spinId === latestSpinId) return;
       const golfer = findGolferByName(state.winner.name);
       if (!golfer) return;
@@ -897,6 +961,7 @@
     configureMode();
     spinButton.addEventListener("click", spin);
     search.addEventListener("input", renderNames);
+    renderHistory([]);
     drawWheel();
     renderNames();
   </script>
