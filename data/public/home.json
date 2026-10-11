@@ -80,6 +80,71 @@
     "headline": "Final September 30 Results Posted",
     "body": "Final standings, September 30 scores, handicap changes, twos, closest-to-pin winners, and sweeps results are available after member login. Late C-flight cards for Aidan Brotherston, Connor Nelson, and Lachlan Nelson have been added."
   },
+  "yearEndPrizeWinners": {
+    "label": "2026 Year End Prizes",
+    "intro": "Congratulations to this year's Rangers prize winners.",
+    "prizes": [
+      {
+        "prize": "Putter",
+        "winners": [
+          "Mike Beckman",
+          "Paul Williams",
+          "Mark Renolds"
+        ]
+      },
+      {
+        "prize": "Wedge",
+        "winners": [
+          "Todd O'Shaughnessy",
+          "Mike Mooradian"
+        ]
+      },
+      {
+        "prize": "Golf Bag",
+        "winners": [
+          "Jerry Covelli",
+          "Campbell Andrews"
+        ]
+      },
+      {
+        "prize": "Shirt / Glove / Tees",
+        "winners": [
+          "Sandy Duva",
+          "Connor Nelson",
+          "Randy Coughler",
+          "Bob Carpenter",
+          "Jim Findlay"
+        ]
+      },
+      {
+        "prize": "Balls",
+        "winners": [
+          "Fred Kryzanowski",
+          "Anthony Falovo",
+          "Josh Falovo",
+          "John Fenwick",
+          "Clive Packham",
+          "John Pankoff"
+        ]
+      },
+      {
+        "prize": "$200 Golf Certificate",
+        "winners": [
+          "David Lees",
+          "Mike Mooradian",
+          "Paul Vaughan",
+          "Darren Miller",
+          "Derek Rodger"
+        ]
+      },
+      {
+        "prize": "Pin High Golf",
+        "winners": [
+          "Ralph Falovo"
+        ]
+      }
+    ]
+  },
   "memorial": {
     "title": "Peter McBride Memorial",
     "kicker": "Our leader, our friend.",

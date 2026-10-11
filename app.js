@@ -314,6 +314,7 @@ function renderHome() {
     })
     .join("");
   const divisionChampions = renderDivisionChampions(home.divisionChampions || []);
+  const yearEndPrizeWinners = renderYearEndPrizeWinners(home.yearEndPrizeWinners || {});
 
   view.innerHTML = html`
     <section class="hero">
@@ -333,6 +334,7 @@ function renderHome() {
         </div>
         ${state.authed ? renderMemberSnapshot() : ""}
         ${divisionChampions}
+        ${yearEndPrizeWinners}
         <div class="home-panels">
           <article class="glass-panel">
             <h2 class="panel-title">Weekly Prize Winners</h2>
@@ -369,6 +371,33 @@ function renderHome() {
           <strong>${escapeHtml(home.memorial.closing)}</strong>
         </div>
       </aside>
+    </section>
+  `;
+}
+
+function renderYearEndPrizeWinners(prizeData) {
+  const prizes = Array.isArray(prizeData.prizes) ? prizeData.prizes : [];
+  if (!prizes.length) return "";
+  return html`
+    <section class="year-end-prizes" aria-label="2026 year end prize winners">
+      <div class="year-end-prizes-head">
+        <span>Prize Draw</span>
+        <h2>${escapeHtml(prizeData.label || "2026 Year End Prizes")}</h2>
+        <p>${escapeHtml(prizeData.intro || "Congratulations to this year's Rangers prize winners.")}</p>
+      </div>
+      <div class="year-end-prize-grid">
+        ${prizes.map((item) => {
+          const winners = Array.isArray(item.winners) ? item.winners : [];
+          return `
+            <article class="year-end-prize-card">
+              <h3>${escapeHtml(item.prize || "Prize")}</h3>
+              <ul>
+                ${winners.map((winner) => `<li>${escapeHtml(winner)}</li>`).join("")}
+              </ul>
+            </article>
+          `;
+        }).join("")}
+      </div>
     </section>
   `;
 }
